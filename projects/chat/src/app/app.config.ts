@@ -17,6 +17,6 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes),
     provideHttpClient(withInterceptors([apiInterceptor])),
-    { provide: ChatService, useClass: ChatServiceMock },
+    { provide: ChatService, useClass: ChatService },
   ],
 };
