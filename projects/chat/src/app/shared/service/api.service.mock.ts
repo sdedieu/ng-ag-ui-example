@@ -285,48 +285,27 @@ const MOCK_CHANGE_USER_TOWN_MESSAGES = [
   },
 ];
 
-import { computed, Injectable, Signal, signal } from '@angular/core';
+import { Injectable } from '@angular/core';
 
-import { interval, map, Subject, switchMap, take, takeWhile, tap } from 'rxjs';
 import {
-  BaseEvent,
-  EventType,
-  TextMessageChunkEvent,
-  ToolCallChunkEvent,
-  RunErrorEvent,
-} from '@ag-ui/client';
-import {
-  ToolCallMessage,
-  AssistantMessage,
-  UserMessage,
-  Message,
-} from '../../shared/models/message';
+  debounceTime,
+  interval,
+  map,
+  Subject,
+  switchMap,
+  takeUntil,
+  takeWhile,
+} from 'rxjs';
+import { EventType } from '@ag-ui/client';
+import { UserMessage } from '../models/message';
 
 @Injectable()
-export class ChatServiceMock {
-  readonly messages = signal<Message[]>([]);
-
-  readonly chatMessages = computed(() =>
-    this.messages().filter(
-      (msg) => msg.role === 'user' || msg.role === 'assistant'
-    )
-  );
-
-  readonly toolCallMessages: Signal<ToolCallMessage[]> = computed(
-    () =>
-      this.messages().filter(
-        (msg) => msg instanceof ToolCallMessage && msg.isCompleted()
-      ) as ToolCallMessage[]
-  );
-
-  readonly isLoading = signal(false);
-
-  private toolCallMessage: ToolCallMessage | null = null;
-  private assistantMessage: Message | null = null;
-
+export class ApiServiceMock {
   private caller$ = new Subject<string>();
+  private canceller$ = new Subject<void>();
 
-  private socketMock = this.caller$.pipe(
+  readonly events$ = this.caller$.pipe(
+    debounceTime(5000),
     map((message) => ({
       param: message.split(' ').slice(-1)[0],
       mocks: this.loadRightMock(message),
@@ -343,72 +322,17 @@ export class ChatServiceMock {
             : {}),
         }))
       )
-    )
+    ),
+    takeUntil(this.canceller$)
   );
 
-  constructor() {
-    console.log('ChatServiceMock loaded');
-    this.socketMock.subscribe((event: BaseEvent) => {
-      switch (event.type) {
-        case EventType.RUN_STARTED: {
-          this.isLoading.set(true);
-          break;
-        }
-
-        case EventType.TEXT_MESSAGE_CHUNK: {
-          const ev = event as TextMessageChunkEvent;
-          if (
-            !this.assistantMessage ||
-            this.assistantMessage.messageId !== ev.messageId
-          ) {
-            this.assistantMessage = new AssistantMessage(ev);
-            this.messages.update((msgs) => [...msgs, this.assistantMessage!]);
-          } else
-            this.assistantMessage.content.update(
-              (content) => content + ev.delta
-            );
-          break;
-        }
-
-        case EventType.TOOL_CALL_CHUNK: {
-          const ev = event as ToolCallChunkEvent;
-          if (
-            !this.toolCallMessage ||
-            this.toolCallMessage?.toolCallId !== ev.toolCallId
-          ) {
-            if (this.toolCallMessage) this.toolCallMessage.complete();
-            this.toolCallMessage = new ToolCallMessage(ev);
-            this.messages.update((msgs) => [...msgs, this.toolCallMessage!]);
-          } else
-            this.toolCallMessage.content.update(
-              (content) => content + ev.delta
-            );
-          break;
-        }
-
-        case EventType.RUN_FINISHED: {
-          if (this.toolCallMessage) {
-            this.toolCallMessage.complete();
-            this.toolCallMessage = null;
-          }
-          this.isLoading.set(false);
-          break;
-        }
-
-        case EventType.RUN_ERROR: {
-          const ev = event as RunErrorEvent;
-          console.error('Error from backend:', ev.message);
-          break;
-        }
-      }
-    });
+  sendMessage(userMessage: UserMessage): void {
+    const content = userMessage.content();
+    this.caller$.next(content);
   }
 
-  sendMessage(content: string): void {
-    const userMessage = new UserMessage(content);
-    this.messages.update((msgs) => [...msgs, userMessage]);
-
-    this.caller$.next(content);
+  cancelMessage(): void {
+    this.canceller$.next();
   }
 
   private loadRightMock(message: string) {
@@ -420,7 +344,11 @@ export class ChatServiceMock {
       )
     )
       return MOCK_ROUTER_NAVIGATE_EVENTS;
+    else if (['town', 'city'].find((key) => message.includes(key)))
+      return MOCK_CHANGE_USER_TOWN_MESSAGES;
+    else if (['email'].find((key) => message.includes(key)))
+      return MOCK_CHANGE_USER_EMAIL_MESSAGES;
 
-    return MOCK_CHANGE_USER_TOWN_MESSAGES;
+    return MOCK_CHANGE_USER_EMAIL_MESSAGES;
   }
 }

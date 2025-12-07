@@ -174,13 +174,6 @@ io.on('connection', (socket) => {
         } else if (toolCalls) {
           const toolCall = toolCalls[0];
           if (toolCall?.id) toolCallId = toolCall.id;
-          console.log(
-            'Tool call detected:',
-            JSON.stringify(toolCall),
-            '-------',
-            toolCallId,
-            '========'
-          );
           socket.emit('event', {
             type: EventType.TOOL_CALL_CHUNK,
             parentMessageId: messageId,

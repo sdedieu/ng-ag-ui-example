@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { ChatMessagesContainer } from './chat-messages-container';
 import { ChatInput } from './chat-input';
 import { ChatService } from './chat.service';
@@ -14,6 +14,8 @@ import { ChatService } from './chat.service';
     <chat-input
       [(inputValue)]="inputValue"
       (onInputSent)="submitMessage($event)"
+      (onCancelSent)="cancelLastMessage()"
+      [loading]="loading()"
     ></chat-input>
   `,
 })
@@ -22,10 +24,15 @@ export class Chat {
 
   private readonly _chatService = inject(ChatService);
 
-  readonly messages = this._chatService.chatMessages;
+  readonly messages = this._chatService.messages;
+  readonly loading = this._chatService.isLoading;
 
   submitMessage(content: string): void {
     this.inputValue = '';
     this._chatService.sendMessage(content);
+  }
+
+  cancelLastMessage(): void {
+    this._chatService.cancelMessage();
   }
 }

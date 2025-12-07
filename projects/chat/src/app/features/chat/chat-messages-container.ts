@@ -1,6 +1,6 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { ChatMessage } from './chat-message';
-import { ChatMessage as Message } from '../../shared/models/message';
+import { Message } from '../../shared/models/message';
 
 @Component({
   selector: 'chat-messages-container',
@@ -8,7 +8,7 @@ import { ChatMessage as Message } from '../../shared/models/message';
   imports: [ChatMessage],
   template: `
     @for(message of messages(); track message.messageId) {
-    <chat-message [message]="message"></chat-message>
+    <chat-message [message]="message"> </chat-message>
     }
   `,
 })

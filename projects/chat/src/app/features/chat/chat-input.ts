@@ -1,4 +1,4 @@
-import { Component, model, output } from '@angular/core';
+import { Component, effect, input, model, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -15,9 +15,40 @@ import { FormsModule } from '@angular/forms';
       (keyup.enter)="submitMessage()"
       placeholder="Type your message..."
     />
+    @if(loading()) {
+
     <button
-      class="p-1 border-1 rounded-md bg-gray-900 text-white"
+      class="p-1 border-1 border-transparent rounded-md bg-gray-100 text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+      (click)="cancelAction()"
+    >
+      <svg
+        class="w-6 h-6 text-gray-800 dark:text-white"
+        aria-hidden="true"
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        fill="none"
+        viewBox="0 0 24 24"
+        class="size-4"
+      >
+        <rect
+          width="18"
+          height="18"
+          x="3"
+          y="3"
+          stroke="currentColor"
+          stroke-linejoin="round"
+          stroke-width="2"
+          rx="1"
+        />
+      </svg>
+    </button>
+
+    } @else {
+    <button
+      class="p-1 border-1 rounded-md bg-gray-900 text-white disabled:bg-gray-100 disabled:cursor-not-allowed"
       (click)="submitMessage()"
+      [disabled]="loading()"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -34,18 +65,30 @@ import { FormsModule } from '@angular/forms';
         />
       </svg>
     </button>
+    }
   `,
 })
 export class ChatInput {
   readonly inputValue = model.required<string>();
+  readonly loading = input<boolean>(false);
+
+  ef = effect(() => {
+    console.log('loading', this.loading());
+  });
 
   readonly onInputSent = output<string>();
+  readonly onCancelSent = output<void>();
 
   submitMessage() {
+    if (this.loading()) return;
     const content = this.inputValue().trim();
     if (content) {
       this.onInputSent.emit(content);
       this.inputValue.set('');
     }
+  }
+
+  cancelAction() {
+    this.onCancelSent.emit();
   }
 }

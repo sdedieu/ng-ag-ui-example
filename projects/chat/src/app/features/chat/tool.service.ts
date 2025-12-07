@@ -1,5 +1,5 @@
 import { computed, effect, inject, Injectable, Signal } from '@angular/core';
-import { ToolCallMessage } from '../../shared/models/message';
+import { MessageStatus, ToolCallMessage } from '../../shared/models/message';
 import { Router } from '@angular/router';
 import { ChatService } from './chat.service';
 import { UserStateService } from '../user-settings/user.state';
@@ -22,13 +22,17 @@ export class ToolService {
     () =>
       this._chatService
         .messages()
-        .filter(
-          (msg) => msg instanceof ToolCallMessage && msg.isCompleted()
-        ) as ToolCallMessage[]
+        .filter((msg) => msg instanceof ToolCallMessage) as ToolCallMessage[]
+  );
+
+  readonly completedCallMessages = computed(() =>
+    this.toolCallMessages().filter(
+      (msg) => msg.status() === MessageStatus.COMPLETE
+    )
   );
 
   readonly changeBackgroundToolMessages = computed(() =>
-    this.toolCallMessages().filter(
+    this.completedCallMessages().filter(
       (msg) => msg.toolCallName === ToolCallName.CHANGE_BACKGROUND
     )
   );
@@ -41,7 +45,7 @@ export class ToolService {
   });
 
   readonly routerNavigateToolMessages = computed(() =>
-    this.toolCallMessages().filter(
+    this.completedCallMessages().filter(
       (msg) => msg.toolCallName === ToolCallName.ROUTER_NAVIGATE
     )
   );
@@ -62,7 +66,7 @@ export class ToolService {
   });
 
   readonly changeFormStateMessages = computed(() => {
-    return this.toolCallMessages().filter(
+    return this.completedCallMessages().filter(
       (msg) => msg.toolCallName === ToolCallName.CHANGE_FORM_STATE
     );
   });
@@ -77,7 +81,6 @@ export class ToolService {
 
   formStateEffect = effect(() => {
     const currentFormState = this.currentFormState();
-    console.log('currentFormState', currentFormState);
     this._userStateService.set(currentFormState);
   });
 }
