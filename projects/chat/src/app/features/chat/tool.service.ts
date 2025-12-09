@@ -2,7 +2,7 @@ import { computed, effect, inject, Injectable, Signal } from '@angular/core';
 import { MessageStatus, ToolCallMessage } from '../../shared/models/message';
 import { Router } from '@angular/router';
 import { ChatService } from './chat.service';
-import { UserStateService } from '../user-settings/user.state';
+import { UserSettingsStateService } from '../user-settings/user-settings.state';
 
 export enum ToolCallName {
   CHANGE_BACKGROUND = 'change_background',
@@ -15,7 +15,7 @@ export enum ToolCallName {
 })
 export class ToolService {
   private readonly _chatService = inject(ChatService);
-  private readonly _userStateService = inject(UserStateService);
+  private readonly _userSettingsStateService = inject(UserSettingsStateService);
   private readonly _router = inject(Router);
 
   readonly toolCallMessages: Signal<ToolCallMessage[]> = computed(
@@ -81,6 +81,6 @@ export class ToolService {
 
   formStateEffect = effect(() => {
     const currentFormState = this.currentFormState();
-    this._userStateService.set(currentFormState);
+    this._userSettingsStateService.set(currentFormState);
   });
 }

@@ -1,5 +1,5 @@
 import { effect, linkedSignal, WritableSignal } from '@angular/core';
-import { form } from '@angular/forms/signals';
+import { FieldTree, form, SchemaOrSchemaFn } from '@angular/forms/signals';
 
 type DeepPartial<T> = {
   [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
@@ -25,7 +25,6 @@ function deepMerge<T>(target: T, patch: DeepPartial<T>): T {
 }
 
 function equal<T extends Record<string, any>>(a: T, b: T): boolean {
-  // if (a === b) return true; // handles exact same reference or primitive values
   if (typeof a !== 'object' || a === null) return false;
   if (typeof b !== 'object' || b === null) return false;
 
@@ -55,6 +54,7 @@ function equal<T extends Record<string, any>>(a: T, b: T): boolean {
 
 export abstract class GenricFormStateService<T extends Record<string, any>> {
   protected abstract readonly _state: WritableSignal<T>;
+  protected abstract readonly schemaOrOptions: SchemaOrSchemaFn<T>;
 
   get state() {
     return this._state.asReadonly();
@@ -68,7 +68,7 @@ export abstract class GenricFormStateService<T extends Record<string, any>> {
     return equal(a, b);
   }
 
-  form() {
+  form(): FieldTree<T> {
     const _userSettingsModel = linkedSignal(() => this.state(), {
       equal: this.equal,
     });
@@ -78,6 +78,6 @@ export abstract class GenricFormStateService<T extends Record<string, any>> {
       if (!this.equal(this.state(), state)) this.set(state);
     });
 
-    return form(_userSettingsModel);
+    return form(_userSettingsModel, this.schemaOrOptions);
   }
 }

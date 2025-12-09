@@ -1,16 +1,12 @@
-import { Component, Directive, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import {
   FormField,
   FormFieldInput,
   FormFieldLabel,
 } from '../../shared/ui/form-field/form-field.component';
-import { Field, form } from '@angular/forms/signals';
-import { UserStateService } from './user.state';
-
-@Directive({
-  selector: 'form',
-})
-export class FormDirective {}
+import { Field } from '@angular/forms/signals';
+import { UserSettingsStateService } from './user-settings.state';
+import { JsonPipe } from '@angular/common';
 
 @Component({
   selector: 'app-user-settings',
@@ -44,7 +40,7 @@ export class FormDirective {}
           form-field-input
           id="city"
           type="city"
-          [field]="userSettingsForm.adress.city"
+          [field]="userSettingsForm.address.city"
         />
       </form-field>
       <form-field>
@@ -53,7 +49,7 @@ export class FormDirective {}
           form-field-input
           id="zipCode"
           type="zipCode"
-          [field]="userSettingsForm.adress.zipCode"
+          [field]="userSettingsForm.address.zipCode"
         />
       </form-field>
       <form-field>
@@ -75,11 +71,12 @@ export class FormDirective {}
         />
       </form-field>
     </form>
+    {{ userSettingsForm.address.zipCode().errors() | json }}
   `,
-  imports: [FormField, FormFieldLabel, FormFieldInput, Field],
+  imports: [FormField, FormFieldLabel, FormFieldInput, Field, JsonPipe],
 })
 export class UserSettingsPage {
-  private readonly userStateService = inject(UserStateService);
+  private readonly userSettingsStateService = inject(UserSettingsStateService);
 
-  userSettingsForm = this.userStateService.form();
+  readonly userSettingsForm = this.userSettingsStateService.form();
 }

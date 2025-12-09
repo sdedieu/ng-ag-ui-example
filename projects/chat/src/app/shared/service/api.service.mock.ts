@@ -305,7 +305,7 @@ export class ApiServiceMock {
   private canceller$ = new Subject<void>();
 
   readonly events$ = this.caller$.pipe(
-    debounceTime(5000),
+    debounceTime(500),
     map((message) => ({
       param: message.split(' ').slice(-1)[0],
       mocks: this.loadRightMock(message),

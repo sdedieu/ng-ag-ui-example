@@ -104,7 +104,7 @@ io.on('connection', (socket) => {
         },
         {
           name: 'change_form_state',
-          description: `Change user settings state partially of completely. User settings state has the following properties: firstname, lastname, adress, email, password. Following this type schema:  interface Adress {
+          description: `Change user settings state partially of completely. User settings state has the following properties: firstname, lastname, address, email, password. Following this type schema:  interface Address {
             city: string;
             zipCode: string;
           }
@@ -112,7 +112,7 @@ io.on('connection', (socket) => {
           interface UserState {
             firstname: string;
             lastname: string;
-            adress: Adress;
+            address: Address;
             email: string;
             password: string;
           }.
