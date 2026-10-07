@@ -7,13 +7,13 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
     <nav class="px-3 bg-gray-100 ">
       <ul class="flex items-center">
         @for (link of links; track link.route) {
-        <li
-          class="py-2 px-3 cursor-pointer"
-          [routerLink]="link.route"
-          routerLinkActive="bg-gray-50 text-gray-500"
-        >
-          {{ link.label }}
-        </li>
+          <li
+            class="py-2 px-3 cursor-pointer"
+            [routerLink]="link.route"
+            routerLinkActive="bg-gray-50 text-gray-500"
+          >
+            {{ link.label }}
+          </li>
         }
       </ul>
     </nav>
@@ -22,7 +22,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 })
 export class NavBar {
   links = [
-    { route: '/home', label: 'Home' },
+    { route: '/dashboard', label: 'Dashboard' },
     { route: '/settings', label: 'Settings' },
   ];
 }

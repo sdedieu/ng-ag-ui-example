@@ -1,4 +1,9 @@
-import { Component, effect, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+} from '@angular/core';
 import { ChatMessagesContainer } from './chat-messages-container';
 import { ChatInput } from './chat-input';
 import { ChatService } from './chat.service';
@@ -18,6 +23,7 @@ import { ChatService } from './chat.service';
       [loading]="loading()"
     ></chat-input>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Chat {
   protected inputValue: string = '';

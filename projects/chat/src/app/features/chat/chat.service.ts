@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, Signal, signal } from '@angular/core';
+import { computed, inject, Injectable, Signal, signal, WritableSignal } from '@angular/core';
 
 import {
   BaseEvent,
@@ -53,9 +53,11 @@ export class ChatService {
     );
   });
 
-  private toolCallMessage: ToolCallMessage | null = null;
-  private assistantMessage: AssistantMessage | null = null;
-  private userMessage: UserMessage | null = null;
+  private toolCallMessage: WritableSignal<ToolCallMessage | null> = signal(null);
+  private assistantMessage: WritableSignal<AssistantMessage | null> = signal(null);
+  private userMessage: WritableSignal<UserMessage | null> = signal(null);
+
+  readonly lastToolCallName = computed(() => this.toolCallMessage()?.toolCallName)
 
   constructor() {
     this._apiService.events$.subscribe({
@@ -68,16 +70,16 @@ export class ChatService {
           case EventType.TEXT_MESSAGE_CHUNK: {
             const ev = event as TextMessageChunkEvent;
             if (
-              !this.assistantMessage ||
-              this.assistantMessage.messageId !== ev.messageId
+              !this.assistantMessage() ||
+              this.assistantMessage()?.messageId !== ev.messageId
             ) {
-              this.assistantMessage = new AssistantMessage(ev);
+              this.assistantMessage.set( new AssistantMessage(ev));
               this._messages.update((msgs) => [
                 ...msgs,
-                this.assistantMessage!,
+                this.assistantMessage()!,
               ]);
             } else
-              this.assistantMessage.content.update(
+              this.assistantMessage()?.content.update(
                 (content) => content + ev.delta
               );
             break;
@@ -86,24 +88,24 @@ export class ChatService {
           case EventType.TOOL_CALL_CHUNK: {
             const ev = event as ToolCallChunkEvent;
             if (
-              !this.toolCallMessage ||
-              this.toolCallMessage?.toolCallId !== ev.toolCallId
+              !this.toolCallMessage() ||
+              this.toolCallMessage()?.toolCallId !== ev.toolCallId
             ) {
-              if (this.toolCallMessage) this.toolCallMessage.complete();
-              this.toolCallMessage = new ToolCallMessage(ev);
-              this._messages.update((msgs) => [...msgs, this.toolCallMessage!]);
+              if (this.toolCallMessage()) this.toolCallMessage()?.complete();
+              this.toolCallMessage.set(new ToolCallMessage(ev));
+              this._messages.update((msgs) => [...msgs, this.toolCallMessage()!]);
             } else
-              this.toolCallMessage.content.update(
+              this.toolCallMessage()?.content.update(
                 (content) => content + ev.delta
               );
             break;
           }
 
           case EventType.RUN_FINISHED: {
-            this.toolCallMessage?.complete();
-            this.toolCallMessage = null;
-            this.assistantMessage?.complete();
-            this.assistantMessage = null;
+            this.toolCallMessage()?.complete();
+            this.toolCallMessage.set(null);
+            this.assistantMessage()?.complete();
+            this.assistantMessage.set(null);
 
             break;
           }
@@ -119,15 +121,15 @@ export class ChatService {
   }
 
   sendMessage(content: string): void {
-    this.userMessage = new UserMessage(content);
-    this._messages.update((msgs) => [...msgs, this.userMessage!]);
+    this.userMessage.set(new UserMessage(content));
+    this._messages.update((msgs) => [...msgs, this.userMessage()!]);
 
-    this._apiService.sendMessage(this.userMessage);
-    this.userMessage?.sent();
+    this._apiService.sendMessage(this.userMessage()!);
+    this.userMessage()?.sent();
   }
 
   cancelMessage(): void {
     this._apiService.cancelMessage();
-    this.userMessage?.cancel();
+    this.userMessage()?.cancel();
   }
 }

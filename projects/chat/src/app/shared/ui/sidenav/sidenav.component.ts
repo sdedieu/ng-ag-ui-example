@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
   selector: 'sidenav',
@@ -13,5 +13,6 @@ import { Component } from '@angular/core';
       <ng-content select="[sidenav]" />
     </aside>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Sidenav {}

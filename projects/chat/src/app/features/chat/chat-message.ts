@@ -1,4 +1,9 @@
-import { Component, computed, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core';
 import { Message, MessageStatus } from '../../shared/models/message';
 import { Loading } from '../../shared/ui/loading/loading';
 
@@ -15,13 +20,15 @@ import { Loading } from '../../shared/ui/loading/loading';
     '[class.hidden]': 'isToolComplete()',
   },
   template: `
-    @if(role() === 'assistant' || role() === 'user' ) {
-    {{ message().content() }}
-    } @if(isLoading()) {
-    <loading />
+    @if (role() === 'assistant' || role() === 'user') {
+      {{ message().content() }}
+    }
+    @if (isLoading()) {
+      <loading />
     }
   `,
   imports: [Loading],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatMessage {
   readonly message = input.required<Message>();
@@ -31,22 +38,22 @@ export class ChatMessage {
   readonly isAI = computed(() => ['assistant', 'tool'].includes(this.role()));
 
   readonly isEmptyAssistant = computed(
-    () => this.role() === 'assistant' && !this.message().content()
+    () => this.role() === 'assistant' && !this.message().content(),
   );
 
   readonly isStreamingTool = computed(
     () =>
       this.role() === 'tool' &&
-      this.message().status() === MessageStatus.STREAMING
+      this.message().status() === MessageStatus.STREAMING,
   );
 
   readonly isToolComplete = computed(
     () =>
       this.role() === 'tool' &&
-      this.message().status() === MessageStatus.COMPLETE
+      this.message().status() === MessageStatus.COMPLETE,
   );
 
   readonly isLoading = computed(
-    () => this.isEmptyAssistant() || this.isStreamingTool()
+    () => this.isEmptyAssistant() || this.isStreamingTool(),
   );
 }

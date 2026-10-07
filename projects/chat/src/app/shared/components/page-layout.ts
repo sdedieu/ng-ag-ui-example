@@ -7,8 +7,10 @@ import { RouterOutlet } from '@angular/router';
   host: {
     class: 'flex flex-col',
   },
-  template: ` <nav-bar class="mb-3" />
-    <main class="px-3 grow">
+  template: ` <nav-bar />
+    <main
+      class="grow flex items-center justify-center min-h-[calc(100vh-40px)]"
+    >
       <router-outlet />
     </main>`,
   imports: [NavBar, RouterOutlet],

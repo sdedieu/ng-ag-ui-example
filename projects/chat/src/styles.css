@@ -1,2 +1,14 @@
 /* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
+
+table thead tr th {
+  @apply px-3 py-2;
+}
+
+table tbody tr td {
+  @apply px-3 py-2 border-t-1;
+}
+
+select {
+  -webkit-appearance: none;
+}

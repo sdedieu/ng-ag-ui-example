@@ -18,11 +18,18 @@ import {
   TextMessageEndEvent,
 } from '@ag-ui/client';
 import { Server } from 'socket.io';
+import {
+  CHANGE_BACKGROUND_TOOL,
+  ROUTER_NAVIGATE_TOOL,
+  CHANGE_USER_SETTINGS_FORM_STATE_TOOL,
+  CHANGE_CREATE_CAMPAIGN_FORM_STATE_TOOL,
+  CLICK_ON_ELEMENT_TOOL,
+} from './tools';
 
 // ✅ Load environment variables
 dotenv.config();
 
-export interface Message {
+interface Message {
   content: string;
   role: 'user' | 'assistant';
   messageId: string;
@@ -44,7 +51,7 @@ app.use(
     origin: 'http://localhost:4200',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
-  })
+  }),
 );
 
 const httpServer = createServer(app);
@@ -71,64 +78,11 @@ io.on('connection', (socket) => {
         },
       ],
       tools: [
-        {
-          name: 'change_background',
-          description:
-            'Change the background color of the chat. Can be anything that the CSS background attribute accepts. Regular colors, linear of radial gradients etc.',
-          parameters: {
-            type: 'object',
-            properties: {
-              background: {
-                type: 'string',
-                description:
-                  'The background. Prefer gradients. Only use when asked.',
-              },
-            },
-            required: ['background'],
-          },
-        },
-        {
-          name: 'router_navigate',
-          description:
-            'Navigate to a different route. There is two different routes: "home" and "settings". "home" should be chosen if user ask to go home or default. "settings" should be chosen if user asks to be bring in its settings',
-          parameters: {
-            type: 'object',
-            properties: {
-              route: {
-                type: 'string',
-                description: 'The route. Prefer home. Only use when asked.',
-              },
-            },
-            required: ['route'],
-          },
-        },
-        {
-          name: 'change_form_state',
-          description: `Change user settings state partially of completely. User settings state has the following properties: firstname, lastname, adress, email, password. Following this type schema:  interface Adress {
-            city: string;
-            zipCode: string;
-          }
-
-          interface UserState {
-            firstname: string;
-            lastname: string;
-            adress: Adress;
-            email: string;
-            password: string;
-          }.
-          Important note: user should first redirected to the "settings" route using the "router_navigate" tool.`,
-          parameters: {
-            type: 'object',
-            properties: {
-              state: {
-                type: 'object',
-                description:
-                  'The state. Only use when asked. Important note: user should first redirected to the "settings" route using the "router_navigate',
-              },
-            },
-            required: ['state'],
-          },
-        },
+        CHANGE_BACKGROUND_TOOL,
+        ROUTER_NAVIGATE_TOOL,
+        CHANGE_USER_SETTINGS_FORM_STATE_TOOL,
+        CHANGE_CREATE_CAMPAIGN_FORM_STATE_TOOL,
+        CLICK_ON_ELEMENT_TOOL,
       ],
       context: [],
     };
@@ -172,6 +126,10 @@ io.on('connection', (socket) => {
             delta: chunk.choices[0]?.delta?.content || '',
           });
         } else if (toolCalls) {
+          console.log(
+            '📦 Tools call:',
+            toolCalls.map((tc) => tc.function?.name).join(', '),
+          );
           const toolCall = toolCalls[0];
           if (toolCall?.id) toolCallId = toolCall.id;
           socket.emit('event', {
@@ -206,6 +164,6 @@ io.on('connection', (socket) => {
 
 httpServer.listen(PORT, () => {
   console.log(
-    `✅ WebSocket + OpenAI server running on http://localhost:${PORT}`
+    `✅ WebSocket + OpenAI server running on http://localhost:${PORT}`,
   );
 });

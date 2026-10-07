@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
-import { HomePage } from './features/home/home';
+import { DashboardPage } from './features/dashboard/dashboard';
 import { UserSettingsPage } from './features/user-settings/user-settings';
 
 export const routes: Routes = [
-  { path: 'home', component: HomePage },
+  { path: 'dashboard', component: DashboardPage },
   { path: 'settings', component: UserSettingsPage },
-  { path: '', pathMatch: 'full', redirectTo: 'home' },
+  { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
 ];
