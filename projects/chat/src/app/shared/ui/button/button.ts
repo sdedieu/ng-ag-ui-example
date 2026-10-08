@@ -2,12 +2,11 @@ import {
   booleanAttribute,
   ChangeDetectionStrategy,
   Component,
-  effect,
   input,
 } from '@angular/core';
 
 @Component({
-  selector: 'button[color]',
+  selector: 'button[color], a[color]',
   host: {
     class:
       'p-2 border-1 border-transparent rounded-md disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed',

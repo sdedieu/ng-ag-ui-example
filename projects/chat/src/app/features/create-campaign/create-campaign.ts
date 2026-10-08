@@ -4,13 +4,9 @@ import {
   Component,
   computed,
   inject,
-  input,
-  Pipe,
-  PipeTransform,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Button } from '../../shared/ui/button/button';
-import { DIALOG_REF } from '../../shared/ui/dialog/dialog.service';
 import {
   FormField,
   FormFieldInput,
@@ -20,12 +16,10 @@ import {
 } from '../../shared/ui/form-field/form-field.component';
 import { AllocationHealthComponent } from './form/allocation-health';
 import { CampaignSectionComponent } from './form/campaign-section';
-import {
-  BudgetChannel,
-  CreateCampaignState,
-  CreateCampaignStateService,
-} from './create-campaign.state';
+import { CreateCampaignStateService } from './create-campaign.state';
 import { Field } from '@angular/forms/signals';
+import { Router } from '@angular/router';
+import { DashboardStateService } from '../dashboard/dashboard.state';
 
 @Component({
   selector: 'create-campaign-dialog',
@@ -376,10 +370,7 @@ import { Field } from '@angular/forms/signals';
               <div>
                 <p class="mb-3 text-sm font-bold">Weekly weighting</p>
                 <div class="grid gap-2 sm:grid-cols-2">
-                  @for (
-                    day of createCampaignForm.dayWeights;
-                    track day
-                  ) {
+                  @for (day of createCampaignForm.dayWeights; track day) {
                     <div class="rounded-md border border-gray-200 p-3">
                       <label class="flex items-center justify-between gap-3">
                         <span class="font-semibold">{{
@@ -410,10 +401,7 @@ import { Field } from '@angular/forms/signals';
               <div>
                 <p class="mb-3 text-sm font-bold">Daypart rules</p>
                 <div class="space-y-3">
-                  @for (
-                    part of createCampaignForm.dayParts;
-                    track part
-                  ) {
+                  @for (part of createCampaignForm.dayParts; track part) {
                     <div
                       class="rounded-md border border-gray-200 bg-gray-50 p-4"
                     >
@@ -736,16 +724,17 @@ import { Field } from '@angular/forms/signals';
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CreateCampaignDialogComponent {
-  private readonly dialogRef = inject(DIALOG_REF);
-  private readonly createCampaignStateService = inject(
+export class CreateCampaignPage {
+  private readonly _router = inject(Router);
+  private readonly _dashboardStateService = inject(DashboardStateService);
+  private readonly _createCampaignStateService = inject(
     CreateCampaignStateService,
   );
 
-  createCampaignForm = this.createCampaignStateService.form();
+  createCampaignForm = this._createCampaignStateService.form();
 
   readonly channelsWithBudget = computed(() => {
-    const state = this.createCampaignStateService.state();
+    const state = this._createCampaignStateService.state();
     const spendableBudget = Math.max(
       0,
       state.totalBudget - state.reserveBudget,
@@ -798,7 +787,7 @@ export class CreateCampaignDialogComponent {
 
   readonly readinessChecks = computed(() => {
     const checks: string[] = [];
-    const state = this.createCampaignStateService.state();
+    const state = this._createCampaignStateService.state();
 
     if (!state.name) {
       checks.push('Campaign name is required');
@@ -832,10 +821,11 @@ export class CreateCampaignDialogComponent {
   });
 
   createCampaign(): void {
-    this.dialogRef.close(this.createCampaignForm().value());
+    this._createCampaignStateService.submit();
+    this._router.navigateByUrl('/dashboard');
   }
 
   resetPlanning(): void {
-    this.createCampaignStateService.reset();
+    this._createCampaignStateService.reset();
   }
 }

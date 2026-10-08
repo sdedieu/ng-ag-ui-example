@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  effect,
   inject,
 } from '@angular/core';
 import { ChatMessagesContainer } from './chat-messages-container';

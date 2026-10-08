@@ -2,17 +2,13 @@ import {
   ChangeDetectionStrategy,
   Component,
   inject,
-  signal,
 } from '@angular/core';
 import { Card } from '../../shared/ui/card/card.component';
 import { Chip } from '../../shared/ui/chip/chip.component';
 import { CurrencyPipe, UpperCasePipe } from '@angular/common';
 import { Button } from '../../shared/ui/button/button';
-import { DialogService } from '../../shared/ui/dialog/dialog.service';
-import { CreateCampaignDialogComponent } from '../create-campaign/create-campaign.dialog';
-import { firstValueFrom } from 'rxjs';
 import { DashboardStateService } from './dashboard.state';
-import { CreateCampaignState } from '../create-campaign/create-campaign.state';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'dashboard',
@@ -26,13 +22,13 @@ import { CreateCampaignState } from '../create-campaign/create-campaign.state';
         </p>
         <h1 class="font-bold text-6xl">Dashboard</h1>
       </div>
-      <button
+      <a
         color="primary"
         id="create-campaign-button"
-        (click)="openCreateCampaignDialog()"
+        routerLink="/create-campaign"
       >
         Create campaign
-      </button>
+      </a>
     </div>
     <table class="w-full">
       <thead>
@@ -62,29 +58,10 @@ import { CreateCampaignState } from '../create-campaign/create-campaign.state';
       </tbody>
     </table>
   </card>`,
-  imports: [Button, Card, Chip, CurrencyPipe, UpperCasePipe],
+  imports: [Button, Card, Chip, CurrencyPipe, UpperCasePipe, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardPage {
-  private readonly dialogService = inject(DialogService);
   private readonly dashboardStateService = inject(DashboardStateService);
-
   readonly campaigns = this.dashboardStateService.campaigns;
-
-  async openCreateCampaignDialog() {
-    const dialogRef = this.dialogService.open<CreateCampaignState>(
-      CreateCampaignDialogComponent,
-      {
-        panelClass: 'w-screen h-screen',
-      },
-    );
-    const result = await firstValueFrom(dialogRef.afterClosed$);
-    if (result)
-      this.dashboardStateService.addCampaign({
-        name: result.name,
-        budget: result.totalBudget,
-        revenue: 0,
-        status: 'alive',
-      });
-  }
 }

@@ -14,8 +14,7 @@ const campaignOptions = {
     {
       id: 'paid-search',
       label: 'Paid search',
-      description:
-        'Capture high-intent demand and defend priority keywords.',
+      description: 'Capture high-intent demand and defend priority keywords.',
       kpi: 'pipeline',
     },
     {
@@ -28,8 +27,7 @@ const campaignOptions = {
     {
       id: 'programmatic',
       label: 'Programmatic display',
-      description:
-        'Bid for reach across curated publishers and account lists.',
+      description: 'Bid for reach across curated publishers and account lists.',
       kpi: 'reach',
     },
     {
@@ -57,14 +55,12 @@ const campaignOptions = {
     {
       id: 'finance-ops',
       label: 'Finance and operations leaders',
-      description:
-        'Budget owners evaluating efficiency and operational risk.',
+      description: 'Budget owners evaluating efficiency and operational risk.',
     },
     {
       id: 'active-pipeline',
       label: 'Open opportunity accounts',
-      description:
-        'Accounts already attached to active sales opportunities.',
+      description: 'Accounts already attached to active sales opportunities.',
     },
     {
       id: 'lookalikes',
@@ -193,9 +189,7 @@ const sneakerDraftExample = {
   })),
   audienceSegments: campaignOptions.audienceSegments.map((segment) => ({
     ...segment,
-    bidAdjustment: ['lookalikes', 'students'].includes(segment.id)
-      ? 10
-      : 0,
+    bidAdjustment: ['lookalikes', 'students'].includes(segment.id) ? 10 : 0,
     selected: ['lookalikes', 'students'].includes(segment.id),
   })),
   minAge: 18,
@@ -237,13 +231,12 @@ const sneakerDraftExample = {
 
 export const CHANGE_CREATE_CAMPAIGN_FORM_STATE_TOOL = {
   name: 'change_create_campaign_form_state',
-  description: `Fill the Create Campaign form from an ordinary-language campaign brief. ALWAYS include a change_create_campaign_form_state call when the user asks to create or configure a campaign, even if the brief gives only a product and a sales goal. For example, "I want to create a new campaign for improving the sells of my snickers (shoes)" is enough to generate a useful draft. This tool's arguments are the campaign state itself. Opening the dialog alone does not fill the form and does not complete this request.
+  description: `Fill the Create Campaign form from an ordinary-language campaign brief. ALWAYS include a change_create_campaign_form_state call when the user asks to create or configure a campaign, even if the brief gives only a product and a sales goal. For example, "I want to create a new campaign for improving the sells of my snickers (shoes)" is enough to generate a useful draft. This tool's arguments are the campaign state itself. Navigating to the page alone does not fill the form and does not complete this request.
 
 Required calls for a new campaign, all in the SAME assistant response:
-1. router_navigate with {"route":"dashboard"}.
-2. click_on_element with {"selector":"create-campaign-button"}.
+1. router_navigate with {"route":"create-campaign"}.
 3. change_create_campaign_form_state with the generated draft object.
-Include all three calls in that order. Do not end the response after navigation or the button click. Do not defer the state call to a later turn, wait for the user to repeat the request, or wait for tool results to construct the draft: its values come from the brief and the schema below. Missing budget, currency or dates must not prevent the state call. No current route or live form state is needed. For a follow-up update in a supplied campaign conversation, call this tool with only changed fields; do not reopen the dialog unnecessarily.
+Include all two calls in that order. Do not defer the state call to a later turn, wait for the user to repeat the request, or wait for tool results to construct the draft: its values come from the brief and the schema below. Missing budget, currency or dates must not prevent the state call. No current route or live form state is needed. For a follow-up update in a supplied campaign conversation, call this tool with only changed fields; do not re-navigate to the page unnecessarily.
 
 Generate a draft:
 - Infer a concise name and objective: revenue for sales, pipeline for leads, retention for existing customers, awareness for reach. Preserve the user's product/brand wording.
@@ -318,8 +311,7 @@ For a subsequent answer "5000 EUR", use {"totalBudget":5000,"currency":"EUR"}, p
           allocation: percentage,
           dailyCap: {
             ...amount,
-            description:
-              'Daily cap in campaign currency; 0 while unconfirmed.',
+            description: 'Daily cap in campaign currency; 0 while unconfirmed.',
           },
           maxBid: {
             ...amount,

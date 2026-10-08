@@ -1,9 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   input,
-  signal,
 } from '@angular/core';
 import { ChatMessage } from './chat-message';
 import { Message } from '../../shared/models/message';

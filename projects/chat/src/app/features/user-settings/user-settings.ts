@@ -9,7 +9,7 @@ import {
   FormFieldInput,
   FormFieldLabel,
 } from '../../shared/ui/form-field/form-field.component';
-import { Field, form } from '@angular/forms/signals';
+import { Field } from '@angular/forms/signals';
 import { UserStateService } from './user.state';
 import { Card } from '../../shared/ui/card/card.component';
 import { UpperCasePipe } from '@angular/common';

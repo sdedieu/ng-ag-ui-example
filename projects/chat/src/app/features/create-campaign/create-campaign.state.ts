@@ -1,5 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { GenricFormStateService } from '../../shared/service/generic-form-state.service';
+import { DashboardStateService } from '../dashboard/dashboard.state';
 
 export interface BudgetChannel {
   id: string;
@@ -257,9 +258,21 @@ const defaultState: CreateCampaignState = {
   providedIn: 'root',
 })
 export class CreateCampaignStateService extends GenricFormStateService<CreateCampaignState> {
+  private readonly _dashboardStateService = inject(DashboardStateService);
+
   protected override readonly _state = signal(defaultState);
 
   reset(): void {
     this._state.set(defaultState);
+  }
+
+  submit(): void {
+    const result = this.state();
+    this._dashboardStateService.addCampaign({
+      name: result.name,
+      budget: result.totalBudget,
+      revenue: 0,
+      status: 'alive',
+    });
   }
 }
