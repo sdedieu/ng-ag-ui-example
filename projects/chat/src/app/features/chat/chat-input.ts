@@ -14,16 +14,16 @@ import { Button } from '../../shared/ui/button/button';
   selector: 'chat-input',
   host: {
     class:
-      'flex gap-4 p-4 justify-between items-center border-1 rounded-md mt-4 border-gray-300 bg-white',
+      'flex gap-4 p-4 justify-between items-center border-1 rounded-md mt-4 border-gray-300 bg-white max-h-[5lh]',
   },
   imports: [FormsModule, Button],
   template: `
-    <input
-      class="focus:outline-none flex-1 p-2"
+    <textarea
+      class="focus:outline-none flex-1 p-2 resize-none field-sizing-content w-96"
       [(ngModel)]="inputValue"
       (keyup.enter)="submitMessage()"
       placeholder="Type your message..."
-    />
+    ></textarea>
     @if (loading()) {
       <button (click)="cancelAction()" color="secondary">
         <svg
