@@ -6,6 +6,8 @@ import {
   TextMessageChunkEvent,
   ToolCallChunkEvent,
   RunErrorEvent,
+  ToolCallEndEvent,
+  TextMessageEndEvent,
 } from '@ag-ui/client';
 import {
   ToolCallMessage,
@@ -24,6 +26,7 @@ export class ChatService {
 
   private readonly _messages = signal<Message[]>([]);
   readonly messages = this._messages.asReadonly();
+  private readonly runActive = signal(false);
 
   readonly isLastMessageUserAndSending = computed(() => {
     const messages = this.messages();
@@ -48,6 +51,7 @@ export class ChatService {
 
   readonly isLoading: Signal<boolean> = computed(() => {
     return (
+      this.runActive() ||
       this.isLastMessageUserAndSending() ||
       this.isSomeMessageAIAndStreamingButEmpty()
     );
@@ -64,6 +68,7 @@ export class ChatService {
       next: (event: BaseEvent) => {
         switch (event.type) {
           case EventType.RUN_STARTED: {
+            this.runActive.set(true);
             break;
           }
 
@@ -101,7 +106,24 @@ export class ChatService {
             break;
           }
 
+          case EventType.TOOL_CALL_END: {
+            const ev = event as ToolCallEndEvent;
+            if (this.toolCallMessage()?.toolCallId === ev.toolCallId) {
+              this.toolCallMessage()?.complete();
+            }
+            break;
+          }
+
+          case EventType.TEXT_MESSAGE_END: {
+            const ev = event as TextMessageEndEvent;
+            if (this.assistantMessage()?.messageId === ev.messageId) {
+              this.assistantMessage()?.complete();
+            }
+            break;
+          }
+
           case EventType.RUN_FINISHED: {
+            this.runActive.set(false);
             this.toolCallMessage()?.complete();
             this.toolCallMessage.set(null);
             this.assistantMessage()?.complete();
@@ -112,6 +134,12 @@ export class ChatService {
 
           case EventType.RUN_ERROR: {
             const ev = event as RunErrorEvent;
+            this.runActive.set(false);
+            this.toolCallMessage()?.error();
+            this.toolCallMessage.set(null);
+            this.assistantMessage()?.error();
+            this.assistantMessage.set(null);
+            this.userMessage()?.status.set(MessageStatus.ERROR);
             console.error('Error from backend:', ev.message);
             break;
           }

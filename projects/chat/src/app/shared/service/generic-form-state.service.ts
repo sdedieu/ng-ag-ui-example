@@ -1,5 +1,5 @@
 import { effect, linkedSignal, WritableSignal } from '@angular/core';
-import { form } from '@angular/forms/signals';
+import { form, FormOptions, SchemaOrSchemaFn } from '@angular/forms/signals';
 
 type DeepPartial<T> = {
   [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
@@ -48,8 +48,8 @@ function equal<T extends Record<string, any>>(a: T, b: T): boolean {
       return equal(aVal, bVal);
     }
 
-    // otherwise primitive comparison
-    return aVal === bVal;
+    // Empty numeric fields use NaN, which must compare equal to itself.
+    return Object.is(aVal, bVal);
   });
 }
 
@@ -68,7 +68,7 @@ export abstract class GenricFormStateService<T extends Record<string, any>> {
     return equal(a, b);
   }
 
-  form() {
+  form(schema: SchemaOrSchemaFn<T> = () => {}, options: FormOptions = {}) {
     const _userSettingsModel = linkedSignal(() => this.state(), {
       equal: this.equal,
     });
@@ -78,6 +78,6 @@ export abstract class GenricFormStateService<T extends Record<string, any>> {
       if (!this.equal(this.state(), state)) this.set(state);
     });
 
-    return form(_userSettingsModel);
+    return form(_userSettingsModel, schema, options);
   }
 }

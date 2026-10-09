@@ -54,6 +54,8 @@ export class ApiServiceMock {
     this.canceller$.next();
   }
 
+  sendToolResult(_toolCallId: string, _result: unknown): void {}
+
   private loadRightMock(message: string) {
     if (['bg', 'background'].find((key) => message.includes(key)))
       return MOCK_CHANGE_BG_EVENTS;

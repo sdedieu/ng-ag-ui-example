@@ -19,7 +19,6 @@ import { CampaignSectionComponent } from './form/campaign-section';
 import { CreateCampaignStateService } from './create-campaign.state';
 import { Field } from '@angular/forms/signals';
 import { Router } from '@angular/router';
-import { DashboardStateService } from '../dashboard/dashboard.state';
 
 @Component({
   selector: 'create-campaign-dialog',
@@ -57,7 +56,13 @@ import { DashboardStateService } from '../dashboard/dashboard.state';
             <button type="button" color="secondary" (click)="resetPlanning()">
               Reset plan
             </button>
-            <button type="submit" color="primary">Create campaign</button>
+            <button
+              type="submit"
+              color="primary"
+              [disabled]="!createCampaignForm().valid()"
+            >
+              Create campaign
+            </button>
           </div>
         </div>
       </div>
@@ -726,12 +731,11 @@ import { DashboardStateService } from '../dashboard/dashboard.state';
 })
 export class CreateCampaignPage {
   private readonly _router = inject(Router);
-  private readonly _dashboardStateService = inject(DashboardStateService);
   private readonly _createCampaignStateService = inject(
     CreateCampaignStateService,
   );
 
-  createCampaignForm = this._createCampaignStateService.form();
+  readonly createCampaignForm = this._createCampaignStateService.campaignForm;
 
   readonly channelsWithBudget = computed(() => {
     const state = this._createCampaignStateService.state();
@@ -785,42 +789,18 @@ export class CreateCampaignPage {
       .reduce((sum, part) => sum + (part.enabled ? part.dailyCap : 0), 0),
   );
 
-  readonly readinessChecks = computed(() => {
-    const checks: string[] = [];
-    const state = this._createCampaignStateService.state();
-
-    if (!state.name) {
-      checks.push('Campaign name is required');
-    }
-    if (!state.objective) {
-      checks.push('Objective is required');
-    }
-    if (!state.currency) {
-      checks.push('Currency is required');
-    }
-    if (state.totalBudget <= 0) {
-      checks.push('Total budget must be greater than 0');
-    }
-    if (!state.startDate) {
-      checks.push('Start date is required');
-    }
-    if (!state.endDate) {
-      checks.push('End date is required');
-    }
-    if (state.startDate && state.endDate && state.startDate > state.endDate) {
-      checks.push('Start date must be before end date');
-    }
-    if (this.selectedSegmentCount() === 0) {
-      checks.push('At least one audience segment must be selected');
-    }
-    if (this.totalDayPartShare() !== 100) {
-      checks.push('Daypart share must equal 100%');
-    }
-
-    return checks;
-  });
+  readonly readinessChecks = computed(() => [
+    ...new Set(
+      this.createCampaignForm()
+        .errorSummary()
+        .map((error) => error.message ?? error.kind),
+    ),
+  ]);
 
   createCampaign(): void {
+    if (!this.createCampaignForm().valid()) {
+      return;
+    }
     this._createCampaignStateService.submit();
     this._router.navigateByUrl('/dashboard');
   }

@@ -1,6 +1,8 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { GenricFormStateService } from '../../shared/service/generic-form-state.service';
 import { DashboardStateService } from '../dashboard/dashboard.state';
+import { form } from '@angular/forms/signals';
+import { createCampaignSchema } from './create-campaign.schema';
 
 export interface BudgetChannel {
   id: string;
@@ -261,6 +263,7 @@ export class CreateCampaignStateService extends GenricFormStateService<CreateCam
   private readonly _dashboardStateService = inject(DashboardStateService);
 
   protected override readonly _state = signal(defaultState);
+  readonly campaignForm = form(this._state, createCampaignSchema);
 
   reset(): void {
     this._state.set(defaultState);

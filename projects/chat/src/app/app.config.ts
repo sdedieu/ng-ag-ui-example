@@ -9,7 +9,6 @@ import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { apiInterceptor } from './shared/interceptors/api.interceptor';
 import { ApiService } from './shared/service/api.service';
-import { ApiServiceMock } from './shared/service/api.service.mock';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -17,6 +16,6 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes),
     provideHttpClient(withInterceptors([apiInterceptor])),
-    { provide: ApiService, useClass: ApiServiceMock },
+    { provide: ApiService, useClass: ApiService },
   ],
 };
