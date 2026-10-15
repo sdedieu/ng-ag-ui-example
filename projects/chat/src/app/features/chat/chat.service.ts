@@ -1,4 +1,11 @@
-import { computed, inject, Injectable, Signal, signal, WritableSignal } from '@angular/core';
+import {
+  computed,
+  inject,
+  Injectable,
+  Signal,
+  signal,
+  WritableSignal,
+} from '@angular/core';
 
 import {
   BaseEvent,
@@ -34,7 +41,7 @@ export class ChatService {
       messages.length > 0 &&
       messages[messages.length - 1].role === 'user' &&
       [MessageStatus.SENDING, MessageStatus.SENT].includes(
-        messages[messages.length - 1].status()
+        messages[messages.length - 1].status(),
       )
     );
   });
@@ -45,7 +52,7 @@ export class ChatService {
       (msg) =>
         msg.status() === MessageStatus.STREAMING &&
         ((msg instanceof AssistantMessage && !msg.content()) ||
-          (msg instanceof ToolCallMessage && !msg.result()))
+          (msg instanceof ToolCallMessage && !msg.result())),
     );
   });
 
@@ -57,11 +64,15 @@ export class ChatService {
     );
   });
 
-  private toolCallMessage: WritableSignal<ToolCallMessage | null> = signal(null);
-  private assistantMessage: WritableSignal<AssistantMessage | null> = signal(null);
+  private toolCallMessage: WritableSignal<ToolCallMessage | null> =
+    signal(null);
+  private assistantMessage: WritableSignal<AssistantMessage | null> =
+    signal(null);
   private userMessage: WritableSignal<UserMessage | null> = signal(null);
 
-  readonly lastToolCallName = computed(() => this.toolCallMessage()?.toolCallName)
+  readonly lastToolCallName = computed(
+    () => this.toolCallMessage()?.toolCallName,
+  );
 
   constructor() {
     this._apiService.events$.subscribe({
@@ -78,14 +89,14 @@ export class ChatService {
               !this.assistantMessage() ||
               this.assistantMessage()?.messageId !== ev.messageId
             ) {
-              this.assistantMessage.set( new AssistantMessage(ev));
+              this.assistantMessage.set(new AssistantMessage(ev));
               this._messages.update((msgs) => [
                 ...msgs,
                 this.assistantMessage()!,
               ]);
             } else
               this.assistantMessage()?.content.update(
-                (content) => content + ev.delta
+                (content) => content + ev.delta,
               );
             break;
           }
@@ -98,10 +109,13 @@ export class ChatService {
             ) {
               if (this.toolCallMessage()) this.toolCallMessage()?.complete();
               this.toolCallMessage.set(new ToolCallMessage(ev));
-              this._messages.update((msgs) => [...msgs, this.toolCallMessage()!]);
+              this._messages.update((msgs) => [
+                ...msgs,
+                this.toolCallMessage()!,
+              ]);
             } else
               this.toolCallMessage()?.content.update(
-                (content) => content + ev.delta
+                (content) => content + ev.delta,
               );
             break;
           }

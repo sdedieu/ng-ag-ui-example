@@ -60,7 +60,7 @@ export class AIMessage implements Message {
       MessageStatus.COMPLETE,
       MessageStatus.ERROR,
       MessageStatus.CANCELLED,
-    ].includes(this.status())
+    ].includes(this.status()),
   );
 
   constructor(readonly event: TextMessageChunkEvent | ToolCallChunkEvent) {
@@ -98,6 +98,7 @@ export class ToolCallMessage extends AIMessage {
     try {
       return JSON.parse(this.content());
     } catch {
+      console.error('failed to parse', this.content());
       return null;
     }
   });

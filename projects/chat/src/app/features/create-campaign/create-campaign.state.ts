@@ -1,8 +1,9 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { effect, inject, Injectable, signal } from '@angular/core';
 import { GenricFormStateService } from '../../shared/service/generic-form-state.service';
 import { DashboardStateService } from '../dashboard/dashboard.state';
 import { form } from '@angular/forms/signals';
 import { createCampaignSchema } from './create-campaign.schema';
+import { ApiService } from '../../shared/service/api.service';
 
 export interface BudgetChannel {
   id: string;
@@ -81,24 +82,24 @@ export interface CreateCampaignState {
 }
 
 const defaultState: CreateCampaignState = {
-  name: 'Q4 enterprise expansion',
-  objective: 'pipeline',
-  currency: 'USD',
-  totalBudget: 125000,
+  name: '',
+  objective: '',
+  currency: '',
+  totalBudget: 0,
   startDate: '',
   endDate: '',
-  pacing: 'adaptive',
-  optimizationWindow: '14d',
-  reserveBudget: 12500,
-  frontloadPercent: 35,
+  pacing: '',
+  optimizationWindow: '',
+  reserveBudget: 0,
+  frontloadPercent: 0,
   channels: [
     {
       id: 'paid-search',
       label: 'Paid search',
       description: 'Capture high-intent demand and defend priority keywords.',
-      allocation: 30,
-      dailyCap: 4500,
-      maxBid: 18,
+      allocation: 0,
+      dailyCap: 0,
+      maxBid: 0,
       kpi: 'pipeline',
       enabled: true,
     },
@@ -107,9 +108,9 @@ const defaultState: CreateCampaignState = {
       label: 'Paid social',
       description:
         'Create demand with lookalikes, retargeting, and creative tests.',
-      allocation: 25,
-      dailyCap: 3600,
-      maxBid: 9.5,
+      allocation: 0,
+      dailyCap: 0,
+      maxBid: 0,
       kpi: 'cpa',
       enabled: true,
     },
@@ -117,9 +118,9 @@ const defaultState: CreateCampaignState = {
       id: 'programmatic',
       label: 'Programmatic display',
       description: 'Bid for reach across curated publishers and account lists.',
-      allocation: 18,
-      dailyCap: 2800,
-      maxBid: 6,
+      allocation: 0,
+      dailyCap: 0,
+      maxBid: 0,
       kpi: 'reach',
       enabled: true,
     },
@@ -128,9 +129,9 @@ const defaultState: CreateCampaignState = {
       label: 'Partner placements',
       description:
         'Reserve spend for sponsored newsletters and marketplace slots.',
-      allocation: 12,
-      dailyCap: 1800,
-      maxBid: 12,
+      allocation: 0,
+      dailyCap: 0,
+      maxBid: 0,
       kpi: 'pipeline',
       enabled: true,
     },
@@ -139,9 +140,9 @@ const defaultState: CreateCampaignState = {
       label: 'Retargeting pool',
       description:
         'Re-engage visitors, sales-qualified accounts, and abandoned demos.',
-      allocation: 15,
-      dailyCap: 2200,
-      maxBid: 14,
+      allocation: 0,
+      dailyCap: 0,
+      maxBid: 0,
       kpi: 'roas',
       enabled: true,
     },
@@ -152,21 +153,21 @@ const defaultState: CreateCampaignState = {
       label: 'Enterprise IT decision makers',
       description:
         'Director+ buyers in security, infrastructure, and platform teams.',
-      bidAdjustment: 35,
+      bidAdjustment: 0,
       selected: true,
     },
     {
       id: 'finance-ops',
       label: 'Finance and operations leaders',
       description: 'Budget owners evaluating efficiency and operational risk.',
-      bidAdjustment: 18,
+      bidAdjustment: 0,
       selected: true,
     },
     {
       id: 'active-pipeline',
       label: 'Open opportunity accounts',
       description: 'Accounts already attached to active sales opportunities.',
-      bidAdjustment: 60,
+      bidAdjustment: 0,
       selected: true,
     },
     {
@@ -174,7 +175,7 @@ const defaultState: CreateCampaignState = {
       label: 'High-value customer lookalikes',
       description:
         'Prospects modeled from customers with strong retention profiles.',
-      bidAdjustment: 22,
+      bidAdjustment: 0,
       selected: true,
     },
     {
@@ -182,12 +183,12 @@ const defaultState: CreateCampaignState = {
       label: 'Students and hobbyists',
       description:
         'Low-fit users with high curiosity and limited commercial intent.',
-      bidAdjustment: -45,
+      bidAdjustment: 0,
       selected: false,
     },
   ],
-  minAge: 25,
-  maxAge: 64,
+  minAge: 18,
+  maxAge: 105,
   locations: 'United States\nUnited Kingdom\nFrance\nGermany',
   exclusions:
     'Existing customers in renewal window\nCompetitors\nRecent unsubscribers\nAccounts with open support escalations',
@@ -212,47 +213,47 @@ const defaultState: CreateCampaignState = {
       label: 'Morning research',
       hours: '06:00 - 09:00',
       enabled: true,
-      bidMultiplier: 0.8,
-      budgetShare: 10,
+      bidMultiplier: 0,
+      budgetShare: 0,
     },
     {
       id: 'workday',
       label: 'Core business hours',
       hours: '09:00 - 16:00',
       enabled: true,
-      bidMultiplier: 1.35,
-      budgetShare: 55,
+      bidMultiplier: 0,
+      budgetShare: 0,
     },
     {
       id: 'commute',
       label: 'Commute and catch-up',
       hours: '16:00 - 19:00',
       enabled: true,
-      bidMultiplier: 1.05,
-      budgetShare: 25,
+      bidMultiplier: 0,
+      budgetShare: 0,
     },
     {
       id: 'late',
       label: 'Late-night browsing',
       hours: '19:00 - 01:00',
       enabled: true,
-      bidMultiplier: 0.7,
-      budgetShare: 10,
+      bidMultiplier: 0,
+      budgetShare: 0,
     },
   ],
   priorityMode: 'front-run',
-  priorityScore: 78,
+  priorityScore: 0,
   overlapPolicy: 'highest-priority',
   auctionStrategy: 'rank-defense',
-  shareOfVoiceTarget: 42,
+  shareOfVoiceTarget: 0,
   cannibalizationGuard: true,
   canBorrowBudget: true,
   competitorCampaigns: 'Always-on search, Brand defense, Webinar retargeting',
   kpiGuardrail: {
-    maxCac: 420,
-    minRoas: 3.2,
-    stopLossPercent: 18,
-    learningBudget: 15000,
+    maxCac: 0,
+    minRoas: 0,
+    stopLossPercent: 0,
+    learningBudget: 0,
   },
 };
 
@@ -261,9 +262,14 @@ const defaultState: CreateCampaignState = {
 })
 export class CreateCampaignStateService extends GenricFormStateService<CreateCampaignState> {
   private readonly _dashboardStateService = inject(DashboardStateService);
+  private readonly _apiService = inject(ApiService);
 
   protected override readonly _state = signal(defaultState);
   readonly campaignForm = form(this._state, createCampaignSchema);
+
+  private readonly syncCampaignState = effect(() => {
+    this._apiService.sendStateSnapshot({ createCampaign: this.state() });
+  });
 
   reset(): void {
     this._state.set(defaultState);
