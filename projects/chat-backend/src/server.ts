@@ -3,7 +3,7 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { OpenAI } from 'openai';
 import dotenv from 'dotenv';
-import { EventType } from '@ag-ui/client';
+import { EventType, StateSnapshotEventSchema } from '@ag-ui/client';
 import type {
   ChatCompletionMessageParam,
   ChatCompletionMessageFunctionToolCall,
@@ -55,6 +55,13 @@ const io = new Server(httpServer, {
 
 io.on('connection', (socket) => {
   console.log('✅ Client connected');
+  socket.on('state-update', (event: unknown) => {
+    const result = StateSnapshotEventSchema.safeParse(event);
+    if (result.success) {
+      // A snapshot replaces the previous state for this connection.
+      socket.data.state = result.data.snapshot;
+    }
+  });
   const threadId = generateUUID();
   const tools = [
     CHANGE_BACKGROUND_TOOL,

@@ -1,8 +1,9 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { effect, inject, Injectable, signal } from '@angular/core';
 import { GenricFormStateService } from '../../shared/service/generic-form-state.service';
 import { DashboardStateService } from '../dashboard/dashboard.state';
 import { form } from '@angular/forms/signals';
 import { createCampaignSchema } from './create-campaign.schema';
+import { ApiService } from '../../shared/service/api.service';
 
 export interface BudgetChannel {
   id: string;
@@ -261,9 +262,14 @@ const defaultState: CreateCampaignState = {
 })
 export class CreateCampaignStateService extends GenricFormStateService<CreateCampaignState> {
   private readonly _dashboardStateService = inject(DashboardStateService);
+  private readonly _apiService = inject(ApiService);
 
   protected override readonly _state = signal(defaultState);
   readonly campaignForm = form(this._state, createCampaignSchema);
+
+  private readonly syncCampaignState = effect(() => {
+    this._apiService.sendStateSnapshot({ createCampaign: this.state() });
+  });
 
   reset(): void {
     this._state.set(defaultState);

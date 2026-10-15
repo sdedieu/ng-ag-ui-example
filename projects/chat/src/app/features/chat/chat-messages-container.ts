@@ -8,7 +8,9 @@ import { Message } from '../../shared/models/message';
 
 @Component({
   selector: 'chat-messages-container',
-  host: { class: 'p-4 grow-1 flex flex-col rounded-md bg-white' },
+  host: {
+    class: 'flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain rounded-md bg-white p-4',
+  },
   imports: [ChatMessage],
   template: `
     @for (message of messages(); track message.messageId) {

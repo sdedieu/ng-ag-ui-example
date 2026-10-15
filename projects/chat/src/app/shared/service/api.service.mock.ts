@@ -23,6 +23,8 @@ export class ApiServiceMock {
   private caller$ = new Subject<string>();
   private canceller$ = new Subject<void>();
 
+  changeCampaignCreationCallIndex = 0;
+
   readonly events$ = this.caller$.pipe(
     debounceTime(1000),
     map((message) => ({
@@ -56,6 +58,8 @@ export class ApiServiceMock {
 
   sendToolResult(_toolCallId: string, _result: unknown): void {}
 
+  sendStateSnapshot(_snapshot: unknown): void {}
+
   private loadRightMock(message: string) {
     if (['bg', 'background'].find((key) => message.includes(key)))
       return MOCK_CHANGE_BG_EVENTS;
@@ -70,6 +74,11 @@ export class ApiServiceMock {
     else if (['email'].find((key) => message.includes(key)))
       return MOCK_CHANGE_USER_EMAIL_MESSAGES;
 
-    return MOCK_CHANGE_CAMPAIGN_CREATION_FORM_STATE_MESSAGES;
+    this.changeCampaignCreationCallIndex =
+      this.changeCampaignCreationCallIndex + 1;
+
+    return MOCK_CHANGE_CAMPAIGN_CREATION_FORM_STATE_MESSAGES[
+      this.changeCampaignCreationCallIndex - 1
+    ];
   }
 }

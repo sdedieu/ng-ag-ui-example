@@ -1,7 +1,11 @@
 import { Injectable } from '@angular/core';
-
 import { io, Socket } from 'socket.io-client';
-import { BaseEvent, EventType, ToolCallEndEvent } from '@ag-ui/client';
+import {
+  BaseEvent,
+  EventType,
+  StateSnapshotEvent,
+  ToolCallEndEvent,
+} from '@ag-ui/client';
 import { environment } from '../../../environments/environment';
 import { UserMessage } from '../../shared/models/message';
 import { Observable } from 'rxjs';
@@ -10,6 +14,26 @@ import { Observable } from 'rxjs';
 export class ApiService {
   private socket: Socket = io(environment.apiUrl);
   private readonly toolResults = new Map<string, (result: unknown) => void>();
+  private latestStateSnapshot?: StateSnapshotEvent;
+
+  constructor() {
+    // Replay only after a feature has supplied a snapshot; new sockets lose state.
+    this.socket.on('connect', () => this.emitStateSnapshot());
+  }
+
+  sendStateSnapshot(snapshot: unknown): void {
+    this.latestStateSnapshot = {
+      type: EventType.STATE_SNAPSHOT,
+      snapshot,
+    };
+    this.emitStateSnapshot();
+  }
+
+  private emitStateSnapshot(): void {
+    if (this.socket.connected && this.latestStateSnapshot) {
+      this.socket.emit('state-update', this.latestStateSnapshot);
+    }
+  }
 
   readonly events$ = new Observable<BaseEvent>((subscriber) => {
     const onEvent = (

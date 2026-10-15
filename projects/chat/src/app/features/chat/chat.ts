@@ -1,8 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ChatMessagesContainer } from './chat-messages-container';
 import { ChatInput } from './chat-input';
 import { ChatService } from './chat.service';
@@ -10,7 +6,7 @@ import { ChatService } from './chat.service';
 @Component({
   selector: 'chat',
   host: {
-    class: 'flex flex-col justify-between p-4 h-screen',
+    class: 'flex h-full min-h-0 flex-col',
   },
   imports: [ChatMessagesContainer, ChatInput],
   template: `

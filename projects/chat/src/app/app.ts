@@ -8,7 +8,7 @@ import { ChatWorkingComponent } from './features/chat/chat-working';
 @Component({
   selector: 'app-root',
   host: {
-    class: 'flex flex-col justify-between min-h-screen',
+    class: 'flex h-dvh flex-col overflow-hidden',
     '[style.background]': 'background()',
   },
   imports: [Chat, Sidenav, PageLayout, ChatWorkingComponent],

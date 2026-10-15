@@ -13,61 +13,63 @@ import { Button } from '../../shared/ui/button/button';
   selector: 'chat-input',
   host: {
     class:
-      'flex gap-4 p-4 justify-between items-center border-1 rounded-md mt-4 border-gray-300 bg-white max-h-[5lh]',
+      'flex flex-col shrink-0 p-0 m-4 justify-between items-center border-1 rounded-md border-gray-300 bg-white max-h-[7lh]',
   },
   imports: [FormsModule, Button],
   template: `
     <textarea
-      class="focus:outline-none flex-1 p-2 resize-none field-sizing-content w-96"
+      class="focus:outline-none flex-1 p-4 resize-none field-sizing-content w-96"
       [(ngModel)]="inputValue"
       (keyup.enter)="submitMessage()"
       placeholder="Type your message..."
     ></textarea>
-    @if (loading()) {
-      <button (click)="cancelAction()" color="secondary">
-        <svg
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          fill="none"
-          viewBox="0 0 24 24"
-          class="size-4"
+    <div class="flex justify-end items-center gap-4 w-full px-4 pb-4 pt-2">
+      @if (loading()) {
+        <button (click)="cancelAction()" color="secondary">
+          <svg
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            fill="none"
+            viewBox="0 0 24 24"
+            class="size-4"
+          >
+            <rect
+              width="18"
+              height="18"
+              x="3"
+              y="3"
+              stroke="currentColor"
+              stroke-linejoin="round"
+              stroke-width="2"
+              rx="1"
+            />
+          </svg>
+        </button>
+      } @else {
+        <button
+          (click)="submitMessage()"
+          color="primary"
+          [disabled]="!trimedInputValue() || loading()"
         >
-          <rect
-            width="18"
-            height="18"
-            x="3"
-            y="3"
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
             stroke="currentColor"
-            stroke-linejoin="round"
-            stroke-width="2"
-            rx="1"
-          />
-        </svg>
-      </button>
-    } @else {
-      <button
-        (click)="submitMessage()"
-        color="primary"
-        [disabled]="!trimedInputValue() || loading()"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="size-4"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18"
-          />
-        </svg>
-      </button>
-    }
+            class="size-4"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18"
+            />
+          </svg>
+        </button>
+      }
+    </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
