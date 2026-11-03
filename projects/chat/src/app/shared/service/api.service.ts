@@ -5,6 +5,7 @@ import {
   EventType,
   StateSnapshotEvent,
   ToolCallEndEvent,
+  Tool,
 } from '@ag-ui/client';
 import { environment } from '../../../environments/environment';
 import { UserMessage } from '../../shared/models/message';
@@ -15,10 +16,14 @@ export class ApiService {
   private socket: Socket = io(environment.apiUrl);
   private readonly toolResults = new Map<string, (result: unknown) => void>();
   private latestStateSnapshot?: StateSnapshotEvent;
+  private tools: Tool[] = [];
 
   constructor() {
     // Replay only after a feature has supplied a snapshot; new sockets lose state.
-    this.socket.on('connect', () => this.emitStateSnapshot());
+    this.socket.on('connect', () => {
+      this.emitTools();
+      this.emitStateSnapshot();
+    });
   }
 
   readonly events$ = new Observable<BaseEvent>((subscriber) => {
@@ -44,6 +49,11 @@ export class ApiService {
     acknowledge?.(result);
   }
 
+  setTools(tools: Tool[]): void {
+    this.tools = tools;
+    this.emitTools();
+  }
+
   sendMessage(userMessage: UserMessage): void {
     this.socket.emit('chat-message', {
       ...userMessage,
@@ -66,6 +76,14 @@ export class ApiService {
   private emitStateSnapshot(): void {
     if (this.socket.connected && this.latestStateSnapshot) {
       this.socket.emit('state-update', this.latestStateSnapshot);
+    }
+  }
+
+  private emitTools(): void {
+    if (this.socket.connected) {
+      this.socket.emit('register-tools', this.tools, (result: { status: string; message?: string }) => {
+        if (result.status === 'error') console.error('Tool registration failed:', result.message);
+      });
     }
   }
 }

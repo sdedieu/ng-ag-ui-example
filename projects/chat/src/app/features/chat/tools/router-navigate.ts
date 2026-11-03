@@ -1,3 +1,6 @@
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+
 export const ROUTER_NAVIGATE_TOOL = {
   name: 'router_navigate',
   description:
@@ -11,5 +14,15 @@ export const ROUTER_NAVIGATE_TOOL = {
       },
     },
     required: ['route'],
+  },
+  loadingMessage: 'Performing router navigation',
+  action: async (args: { route: string }) => {
+    const router = inject(Router);
+    if (!(await router.navigateByUrl(args.route)) && !router.isActive(args.route, {
+      paths: 'exact', queryParams: 'exact', fragment: 'exact', matrixParams: 'exact',
+    })) {
+      throw new Error('Navigation did not complete');
+    }
+    return { status: 'success' };
   },
 };

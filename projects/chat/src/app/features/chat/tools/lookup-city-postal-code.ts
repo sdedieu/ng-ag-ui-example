@@ -1,0 +1,42 @@
+import { effect, EffectRef, inject, Injector } from '@angular/core';
+import { PostalCodeService } from '../../user-settings/postal-code.service';
+import { UserStateService } from '../../user-settings/user.state';
+
+export const LOOKUP_CITY_POSTAL_CODE_TOOL = {
+  name: 'lookup_city_postal_code',
+  description: `Look up postal codes for a French city before changing the user's city.
+    Uses the current address to prefer a unique match in the same postal area.
+    If status is found, use the returned address.city and address.zipCode together
+    in change_user_settings_form_state. If ambiguous or not_found, ask the user
+    to clarify and do not change either address field. Never invent a postal code.
+    This tool only looks up an address; it does not change the form.`,
+  parameters: {
+    type: 'object',
+    properties: {
+      city: { type: 'string', description: 'The new French city name.' },
+    },
+    required: ['city'],
+    additionalProperties: false,
+  },
+  loadingMessage: 'Looking up postal codes',
+  action: async (args: { city: string }) => {
+    const service = inject(PostalCodeService);
+    const injector = inject(Injector);
+    service.lookup(args.city, inject(UserStateService).state().adress);
+    let watcher: EffectRef | undefined;
+    try {
+      return await new Promise<unknown>((resolve, reject) => {
+        watcher = effect(() => {
+          if (service.postalCodes.isLoading()) return;
+          if (service.postalCodes.hasValue()) {
+            resolve(service.result());
+          } else if (service.postalCodes.error()) {
+            reject(new Error('Postal-code lookup is unavailable. Ask the user for the postal code.'));
+          }
+        }, { injector });
+      });
+    } finally {
+      watcher?.destroy();
+    }
+  },
+};

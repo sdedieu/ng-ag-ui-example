@@ -1,3 +1,6 @@
+import { inject } from '@angular/core';
+import { AppearanceService } from '../../../shared/service/appearance.service';
+
 export const CHANGE_BACKGROUND_TOOL = {
   name: 'change_background',
   description:
@@ -11,5 +14,10 @@ export const CHANGE_BACKGROUND_TOOL = {
       },
     },
     required: ['background'],
+  },
+  loadingMessage: 'Changing background color',
+  action: (args: { background: string }) => {
+    inject(AppearanceService).background.set(args.background);
+    return { status: 'success' };
   },
 };

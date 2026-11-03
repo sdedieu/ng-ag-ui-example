@@ -56,6 +56,8 @@ export class ApiServiceMock {
     this.canceller$.next();
   }
 
+  setTools(_tools: unknown): void {}
+
   sendToolResult(_toolCallId: string, _result: unknown): void {}
 
   sendStateSnapshot(_snapshot: unknown): void {}

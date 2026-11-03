@@ -8,6 +8,8 @@ import {
   RunAgentInput,
   StateSnapshotEventSchema,
   ToolCallChunkEvent,
+  Tool,
+  ToolSchema,
 } from '@ag-ui/client';
 import { Server } from 'socket.io';
 import type {
@@ -15,14 +17,6 @@ import type {
   ResponseFunctionToolCall,
   ResponseInput,
 } from 'openai/resources/responses/responses';
-import {
-  CHANGE_BACKGROUND_TOOL,
-  ROUTER_NAVIGATE_TOOL,
-  CHANGE_USER_SETTINGS_FORM_STATE_TOOL,
-  CHANGE_CREATE_CAMPAIGN_FORM_STATE_TOOL,
-  CLICK_ON_ELEMENT_TOOL,
-  LOOKUP_CITY_POSTAL_CODE_TOOL,
-} from './tools';
 
 // ✅ Load environment variables
 dotenv.config();
@@ -101,6 +95,22 @@ io.on('connection', (socket) => {
   const threadId = generateUUID();
   let lastResponseId: string | undefined;
   let conversationQueue = Promise.resolve();
+  let registeredTools: Tool[] = [];
+
+  socket.on('register-tools', (
+    definitions: unknown,
+    acknowledge?: (result: { status: string; message?: string }) => void,
+  ) => {
+    const parsed = ToolSchema.array().safeParse(definitions);
+    if (!parsed.success || new Set(parsed.data.map((tool) => tool.name)).size !== parsed.data.length ||
+      !parsed.data.every((tool) => /^[a-zA-Z0-9_-]{1,64}$/.test(tool.name) &&
+        tool.parameters && typeof tool.parameters === 'object' && !Array.isArray(tool.parameters))) {
+      acknowledge?.({ status: 'error', message: 'Invalid or duplicate tool definitions' });
+      return;
+    }
+    registeredTools = parsed.data;
+    acknowledge?.({ status: 'success' });
+  });
 
   socket.on('state-update', (event: unknown) => {
     console.log('📩 State:', event);
@@ -125,14 +135,7 @@ io.on('connection', (socket) => {
             id: message.messageId,
           },
         ],
-        tools: [
-          CHANGE_BACKGROUND_TOOL,
-          ROUTER_NAVIGATE_TOOL,
-          CHANGE_USER_SETTINGS_FORM_STATE_TOOL,
-          CHANGE_CREATE_CAMPAIGN_FORM_STATE_TOOL,
-          CLICK_ON_ELEMENT_TOOL,
-          LOOKUP_CITY_POSTAL_CODE_TOOL,
-        ],
+        tools: registeredTools,
         context: [],
       };
 

@@ -1,3 +1,5 @@
+import { inject } from '@angular/core';
+import { ToolService } from '../tool.service';
 import { CHANGE_BACKGROUND_TOOL } from './change-background';
 import { ROUTER_NAVIGATE_TOOL } from './router-navigate';
 import { CHANGE_USER_SETTINGS_FORM_STATE_TOOL } from './change-user-settings-form-state';
@@ -12,11 +14,12 @@ export * from './change-create-campaign-form-state';
 export * from './click-on-element';
 export * from './lookup-city-postal-code';
 
-export const tools = [
-  CHANGE_BACKGROUND_TOOL,
-  ROUTER_NAVIGATE_TOOL,
-  CHANGE_USER_SETTINGS_FORM_STATE_TOOL,
-  CHANGE_CREATE_CAMPAIGN_FORM_STATE_TOOL,
-  CLICK_ON_ELEMENT_TOOL,
-  LOOKUP_CITY_POSTAL_CODE_TOOL,
-].map((tool) => ({ type: 'function' as const, function: tool }));
+export function registerAppTools(): void {
+  const tools = inject(ToolService);
+  tools.register(CHANGE_BACKGROUND_TOOL);
+  tools.register(ROUTER_NAVIGATE_TOOL);
+  tools.register(CHANGE_USER_SETTINGS_FORM_STATE_TOOL);
+  tools.register(CHANGE_CREATE_CAMPAIGN_FORM_STATE_TOOL);
+  tools.register(CLICK_ON_ELEMENT_TOOL);
+  tools.register(LOOKUP_CITY_POSTAL_CODE_TOOL);
+}

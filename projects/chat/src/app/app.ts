@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Sidenav } from './shared/ui/sidenav/sidenav.component';
-import { ToolService } from './features/chat/tool.service';
+import { AppearanceService } from './shared/service/appearance.service';
 import { Chat } from './features/chat/chat';
 import { PageLayout } from './shared/components/page-layout';
 import { ChatWorkingComponent } from './features/chat/chat-working';
@@ -22,6 +22,5 @@ import { ChatWorkingComponent } from './features/chat/chat-working';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
-  private readonly _toolService = inject(ToolService);
-  readonly background = this._toolService.currentBackground;
+  readonly background = inject(AppearanceService).background;
 }

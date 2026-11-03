@@ -1,3 +1,8 @@
+import { inject } from '@angular/core';
+import { UserStateService } from '../../user-settings/user.state';
+
+type UserSettingsPatch = Parameters<UserStateService['set']>[0];
+
 export const CHANGE_USER_SETTINGS_FORM_STATE_TOOL = {
   name: 'change_user_settings_form_state',
   description: `Change user settings state partially of completely. User settings state has the following properties: firstname, lastname, adress, email, password. Following this type schema:  interface Adress {
@@ -28,5 +33,14 @@ export const CHANGE_USER_SETTINGS_FORM_STATE_TOOL = {
       },
     },
     required: ['state'],
+  },
+  loadingMessage: 'Adapting user settings',
+  action: (args: UserSettingsPatch & { state?: UserSettingsPatch }) => {
+    const state = args.state ?? args;
+    if (state.adress?.city !== undefined && !state.adress.zipCode) {
+      throw new Error('Look up the city postal code first, then update adress.city and adress.zipCode together.');
+    }
+    inject(UserStateService).set(state);
+    return { status: 'success' };
   },
 };

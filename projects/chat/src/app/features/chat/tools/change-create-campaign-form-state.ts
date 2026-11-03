@@ -1,3 +1,6 @@
+import { inject } from '@angular/core';
+import { CreateCampaignStateService } from '../../create-campaign/create-campaign.state';
+
 const percentage = {
   type: 'number',
   minimum: 0,
@@ -478,5 +481,17 @@ If this draft is included in the supplied conversation and the subsequent answer
         },
       },
     },
+  },
+  loadingMessage: 'Adapting campaign creation form',
+  action: (args: Parameters<CreateCampaignStateService['set']>[0]) => {
+    const campaigns = inject(CreateCampaignStateService);
+    campaigns.set(args);
+    const form = campaigns.campaignForm();
+    return {
+      status: 'success',
+      state: campaigns.state(),
+      valid: form.valid(),
+      errors: form.errorSummary().map(({ kind, message }) => ({ kind, message })),
+    };
   },
 };
