@@ -30,4 +30,10 @@ const defaultState: UserState = {
 })
 export class UserStateService extends GenricFormStateService<UserState> {
   protected override readonly _state = signal(defaultState);
+  private readonly _lastSubmittedState = signal(defaultState);
+  readonly lastSubmittedState = this._lastSubmittedState.asReadonly();
+
+  submit(value: UserState): void {
+    this._lastSubmittedState.set(structuredClone(value));
+  }
 }

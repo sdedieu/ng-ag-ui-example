@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   Directive,
   inject,
 } from '@angular/core';
@@ -9,7 +10,8 @@ import {
   FormFieldInput,
   FormFieldLabel,
 } from '../../shared/ui/form-field/form-field.component';
-import { Field } from '@angular/forms/signals';
+import { email, Field, required } from '@angular/forms/signals';
+import { FormsModule } from '@angular/forms';
 import { UserStateService } from './user.state';
 import {
   Card,
@@ -19,6 +21,7 @@ import {
   CardTitle,
 } from '../../shared/ui/card/card.component';
 import { UpperCasePipe } from '@angular/common';
+import { Button } from '../../shared/ui/button/button';
 
 @Directive({
   selector: 'form',
@@ -39,7 +42,7 @@ export class FormDirective {}
         <h1 card-title>User Settings</h1>
       </card-header>
       <card-content>
-        <form class="flex flex-col items-center gap-6">
+        <form class="flex flex-col items-center gap-6" (ngSubmit)="submit()">
           <form-field>
             <form-field-label>Firstname</form-field-label>
             <input
@@ -94,11 +97,22 @@ export class FormDirective {}
               [field]="userSettingsForm.password"
             />
           </form-field>
+          @if (hasChanges()) {
+            <button
+              type="submit"
+              color="primary"
+              [disabled]="!userSettingsForm().valid()"
+            >
+              Save changes
+            </button>
+          }
         </form>
       </card-content>
     </card>
   `,
   imports: [
+    Button,
+    FormsModule,
     Card,
     CardContent,
     CardDescription,
@@ -115,5 +129,27 @@ export class FormDirective {}
 export class UserSettingsPage {
   private readonly userStateService = inject(UserStateService);
 
-  userSettingsForm = this.userStateService.form();
+  readonly userSettingsForm = this.userStateService.form((path) => {
+    required(path.firstname);
+    required(path.lastname);
+    required(path.adress.city);
+    required(path.adress.zipCode);
+    required(path.email);
+    email(path.email);
+    required(path.password);
+  });
+
+  readonly hasChanges = computed(
+    () =>
+      !this.userStateService.equal(
+        this.userSettingsForm().value(),
+        this.userStateService.lastSubmittedState(),
+      ),
+  );
+
+  submit(): void {
+    if (!this.hasChanges() || !this.userSettingsForm().valid()) return;
+
+    this.userStateService.submit(this.userSettingsForm().value());
+  }
 }

@@ -1,10 +1,11 @@
-import { computed, effect, inject, Injectable, Signal } from '@angular/core';
+import { computed, effect, EffectRef, inject, Injectable, Injector, Signal } from '@angular/core';
 import { MessageStatus, ToolCallMessage } from '../../shared/models/message';
 import { Router } from '@angular/router';
 import { ChatService } from './chat.service';
 import { UserStateService } from '../user-settings/user.state';
 import { CreateCampaignStateService } from '../create-campaign/create-campaign.state';
 import { ApiService } from '../../shared/service/api.service';
+import { PostalCodeService } from '../user-settings/postal-code.service';
 
 export enum ToolCallName {
   CHANGE_BACKGROUND = 'change_background',
@@ -12,6 +13,7 @@ export enum ToolCallName {
   CHANGE_USER_SETTINGS_FORM_STATE = 'change_user_settings_form_state',
   CHANGE_CREATE_CAMPAIGN_FORM_STATE = 'change_create_campaign_form_state',
   CLICK_ON_ELEMENT = 'click_on_element',
+  LOOKUP_CITY_POSTAL_CODE = 'lookup_city_postal_code',
 }
 
 @Injectable({
@@ -25,6 +27,8 @@ export class ToolService {
   );
   private readonly _router = inject(Router);
   private readonly _apiService = inject(ApiService);
+  private readonly _postalCodeService = inject(PostalCodeService);
+  private readonly _injector = inject(Injector);
 
   readonly toolCallMessages: Signal<ToolCallMessage[]> = computed(
     () =>
@@ -87,13 +91,47 @@ export class ToolService {
         // The app derives its background from completed tool messages.
         return { status: 'success' };
       case ToolCallName.ROUTER_NAVIGATE:
-        if (!(await this._router.navigateByUrl(args.route))) {
+        if (
+          !(await this._router.navigateByUrl(args.route)) &&
+          !this._router.isActive(args.route, {
+            paths: 'exact',
+            queryParams: 'exact',
+            fragment: 'exact',
+            matrixParams: 'exact',
+          })
+        ) {
           throw new Error('Navigation did not complete');
         }
         return { status: 'success' };
-      case ToolCallName.CHANGE_USER_SETTINGS_FORM_STATE:
-        this._userStateService.set(args.state ?? args);
+      case ToolCallName.LOOKUP_CITY_POSTAL_CODE: {
+        this._postalCodeService.lookup(
+          args.city, this._userStateService.state().adress,
+        );
+        const postalCode = this._postalCodeService.postalCodes;
+        let watcher: EffectRef | undefined;
+        try {
+          return await new Promise<unknown>((resolve, reject) => {
+            watcher = effect(() => {
+              if (postalCode.isLoading()) return;
+              if (postalCode.hasValue()) {
+                resolve(this._postalCodeService.result());
+              } else if (postalCode.error()) {
+                reject(new Error('Postal-code lookup is unavailable. Ask the user for the postal code.'));
+              }
+            }, { injector: this._injector });
+          });
+        } finally {
+          watcher?.destroy();
+        }
+      }
+      case ToolCallName.CHANGE_USER_SETTINGS_FORM_STATE: {
+        const state = args.state ?? args;
+        if (state.adress?.city !== undefined && !state.adress.zipCode) {
+          throw new Error('Look up the city postal code first, then update adress.city and adress.zipCode together.');
+        }
+        this._userStateService.set(state);
         return { status: 'success' };
+      }
       case ToolCallName.CHANGE_CREATE_CAMPAIGN_FORM_STATE: {
         this._createCampaignStateService.set(args);
         const form = this._createCampaignStateService.campaignForm();
