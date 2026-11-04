@@ -1,3 +1,4 @@
+/**  --- step 2 code start --- */
 import { DOCUMENT } from '@angular/common';
 import { inject } from '@angular/core';
 
@@ -23,3 +24,4 @@ export const CLICK_ON_ELEMENT_TOOL = {
     return { status: 'success' };
   },
 };
+/**  --- step 2 code end --- */

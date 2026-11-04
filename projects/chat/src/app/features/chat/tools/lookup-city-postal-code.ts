@@ -1,3 +1,4 @@
+/**  --- step 2 code start --- */
 import { effect, EffectRef, inject, Injector } from '@angular/core';
 import { PostalCodeService } from '../../user-settings/postal-code.service';
 import { UserStateService } from '../../user-settings/user.state';
@@ -40,3 +41,4 @@ export const LOOKUP_CITY_POSTAL_CODE_TOOL = {
     }
   },
 };
+/**  --- step 2 code end --- */

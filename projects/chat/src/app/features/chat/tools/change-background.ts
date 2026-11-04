@@ -1,3 +1,4 @@
+/**  --- step 2 code start --- */
 import { inject } from '@angular/core';
 import { AppearanceService } from '../../../shared/service/appearance.service';
 
@@ -21,3 +22,4 @@ export const CHANGE_BACKGROUND_TOOL = {
     return { status: 'success' };
   },
 };
+/**  --- step 2 code end --- */

@@ -1,3 +1,4 @@
+/**  --- step 2 code start --- */
 import { inject } from '@angular/core';
 import { CreateCampaignStateService } from '../../create-campaign/create-campaign.state';
 
@@ -262,7 +263,7 @@ These are requirements for the resulting campaign to be ready, not required keys
 - Required text: name and locations must contain non-whitespace text. A product-based name may be inferred; target locations must come from the user. exclusions and competitorCampaigns are optional and may remain empty.
 - Required selections: objective, currency, pacing, optimizationWindow, priorityMode, overlapPolicy and auctionStrategy must each be one of the non-empty enum values in the parameter schema. Currency must be USD, GBP or EUR; "" is an incomplete draft placeholder.
 - Required budget: totalBudget must be finite and strictly greater than 0. reserveBudget must be present, finite and >= 0, and must not exceed totalBudget. A zero reserve is valid.
-- Required dates: startDate and endDate must be real YYYY-MM-DD calendar dates, not just strings matching the format. Reject impossible dates such as February 30. startDate <= endDate; equal dates are valid for a one-day campaign. Ask for exact dates if relative dates cannot be resolved from the supplied context.
+- Required dates: startDate and endDate must be real YYYY-MM-DD calendar dates, not just strings matching the format. Reject impossible dates such as February 30. startDate <= endDate; equal dates are valid for a one-day campaign. Resolve relative dates using the current local date and time zone supplied in the request. For a month/day without a year, choose the first valid occurrence on or after the start date. Apply the resolved dates immediately with a partial patch, even if budget, currency or other required fields are missing. Do not ask for the year when this rule resolves it.
 - Channels: enable at least one. For every enabled channel, allocation is required and must be finite in [0, 100], dailyCap and maxBid are required and must each be finite and strictly > 0, and kpi must be a valid option (preserve the fixed KPI supplied below). Enabled allocations must total 100%. Zero caps/bids on enabled channels are unresolved required inputs even after totalBudget is supplied. Disabled channels do not need positive caps/bids and do not contribute to allocation totals.
 - Audiences and devices: select at least one audience segment and at least one device. Each selected audience's bidAdjustment is required, finite and >= -100; 0 is neutral and there is no upper bound. Unselected audience adjustments do not block readiness.
 - Ages: minAge and maxAge are required, finite, nonnegative whole numbers with minAge <= maxAge. Equal ages are valid.
@@ -272,6 +273,10 @@ These are requirements for the resulting campaign to be ready, not required keys
 - Other guardrails: kpiGuardrail.maxCac, minRoas and learningBudget are required, finite and >= 0. learningBudget must not exceed totalBudget. All three may legitimately be 0; do not treat those zeros as missing.
 
 Missing-input and correction workflow:
+The latest frontendState context contains createCampaign and createCampaignValidation.
+These include manual edits and override older drafts, tool results and errors. Preserve those edits.
+For example, if the snapshot has totalBudget 30000 but currency is empty, ask only for currency,
+not for the total budget again. Apply a follow-up date patch without resending or resetting the draft.
 After this tool executes, use its returned state, valid flag and validation errors to produce the chat reply. Explain that the draft is incomplete when errors remain and ask concise grouped questions for those errors, naming channels that need caps or bids. Once the requested changes are applied, do not call this tool again merely because the draft is incomplete; wait for the user's answers. Never submit the campaign automatically.
 1. Assess the resulting draft using the supplied campaign context plus the proposed patch. A field omitted from a follow-up patch keeps its previous value; omission alone does not mean it is missing. Use only context actually supplied to you. Without campaign context, do not claim to know existing values or that the whole form is ready.
 2. Fill safe planning suggestions as described above. Ask for missing business facts: total budget and currency, dates, locations, and positive daily caps and max bids for each enabled channel. Name the affected channels and group related questions. Ask only for unresolved inputs; do not repeat values already supplied or ask for optional text and valid zero settings.
@@ -495,3 +500,4 @@ If this draft is included in the supplied conversation and the subsequent answer
     };
   },
 };
+/**  --- step 2 code end --- */

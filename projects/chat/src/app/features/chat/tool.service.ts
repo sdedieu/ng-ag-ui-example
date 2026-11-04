@@ -1,8 +1,9 @@
-import { computed, effect, inject, Injectable, Injector, runInInjectionContext, signal } from '@angular/core';
-import type { Tool } from '@ag-ui/client';
-import { MessageStatus, ToolCallMessage } from '../../shared/models/message';
-import { ChatService } from './chat.service';
-import { ApiService } from '../../shared/service/api.service';
+/**  --- step 2 code start --- */
+import { computed, inject, Injectable, Injector, runInInjectionContext, signal } from '@angular/core';
+import { BaseEvent, EventType, Tool, ToolCallChunkEvent, ToolCallEndEvent } from '@ag-ui/client';
+/**  --- step 3 code start --- */
+import { ChatStateService } from '../../shared/service/chat-state.service';
+/**  --- step 3 code end --- */
 
 export interface RegisteredTool<TArgs extends object> extends Tool {
   parameters: Record<string, unknown>;
@@ -11,75 +12,63 @@ export interface RegisteredTool<TArgs extends object> extends Tool {
   action: (args: TArgs) => unknown;
 }
 
-@Injectable({ providedIn: 'root' })
+// tool registration and execution; independent of the chat transcript.
+@Injectable()
 export class ToolService {
-  private readonly chat = inject(ChatService);
-  private readonly api = inject(ApiService);
   private readonly injector = inject(Injector);
-  private readonly tools = signal(new Map<string, {
-    definition: Tool;
-    loadingMessage?: string;
-    action: (args: Record<string, unknown>) => unknown;
-  }>());
+  /**  --- step 3 code start --- */
+  private readonly state = inject(ChatStateService, { optional: true });
+  /**  --- step 3 code end --- */
+  private readonly tools = signal(new Map<string, RegisteredTool<Record<string, unknown>>>());
+  private readonly calls = new Map<string, { name: string; args: string }>();
+  private readonly activeTool = signal('');
 
-  readonly loadingMessage = computed(() =>
-    this.tools().get(this.chat.lastToolCallName() ?? '')?.loadingMessage ?? 'Loading',
-  );
+  readonly definitions = computed(() => [...this.tools().values()].map(({ action, loadingMessage, ...definition }) => definition));
+  readonly loadingMessage = computed(() => this.tools().get(this.activeTool())?.loadingMessage ?? 'Loading');
 
   register<TArgs extends object>(tool: RegisteredTool<TArgs>): void {
     if (this.tools().has(tool.name)) throw new Error(`Tool already registered: ${tool.name}`);
-    const { action, loadingMessage, ...definition } = tool;
-    const tools = new Map(this.tools());
-    tools.set(tool.name, {
-      definition,
-      loadingMessage,
-      action: (args) => action(args as TArgs),
-    });
-    this.tools.set(tools);
-    this.api.setTools([...tools.values()].map((entry) => entry.definition));
+    this.tools.update((tools) => new Map(tools).set(tool.name, {
+      ...tool,
+      action: (args) => tool.action(args as TArgs),
+    }));
   }
 
-  private readonly completedCallMessages = computed(() =>
-    this.chat.messages().filter((message): message is ToolCallMessage =>
-      message instanceof ToolCallMessage && message.status() === MessageStatus.COMPLETE,
-    ),
-  );
-
-  private readonly executedMessages = new WeakSet<ToolCallMessage>();
-  private executionQueue = Promise.resolve();
-
-  readonly executeToolCalls = effect(() => {
-    for (const message of this.completedCallMessages()) {
-      if (this.executedMessages.has(message)) continue;
-      this.executedMessages.add(message);
-      this.executionQueue = this.executionQueue.then(async () => {
-        let result: unknown;
-        try {
-          result = await this.executeTool(message);
-        } catch (error) {
-          result = {
-            status: 'error',
-            message:
-              error instanceof Error ? error.message : 'Tool execution failed',
-          };
-        }
-        if (message.toolCallId) {
-          this.api.sendToolResult(message.toolCallId, result);
-        }
-      });
+  async handleEvent(event: BaseEvent, acknowledge?: (result: unknown) => void): Promise<void> {
+    if ([EventType.RUN_STARTED, EventType.RUN_FINISHED, EventType.RUN_ERROR].includes(event.type)) {
+      this.activeTool.set('');
     }
-  });
-
-  private async executeTool(message: ToolCallMessage): Promise<unknown> {
-    const args: unknown = message.result();
-    if (!args || typeof args !== 'object' || Array.isArray(args)) {
-      throw new Error('Tool arguments must be a JSON object');
+    if (event.type === EventType.TOOL_CALL_CHUNK) {
+      const chunk = event as ToolCallChunkEvent;
+      if (!chunk.toolCallId) return;
+      const call = this.calls.get(chunk.toolCallId) ?? { name: chunk.toolCallName ?? '', args: '' };
+      call.args += chunk.delta ?? '';
+      this.calls.set(chunk.toolCallId, call);
+      this.activeTool.set(call.name);
     }
-    const tool = this.tools().get(message.toolCallName ?? '');
-    if (!tool) throw new Error(`Unknown tool: ${message.toolCallName}`);
-    const result = await runInInjectionContext(this.injector, () =>
-      tool.action(args as Record<string, unknown>),
-    );
-    return result ?? { status: 'success' };
+    if (event.type === EventType.TOOL_CALL_END && acknowledge) {
+      const { toolCallId } = event as ToolCallEndEvent;
+      const call = this.calls.get(toolCallId);
+      this.calls.delete(toolCallId);
+      // The backend awaits this acknowledgement before sending the next tool.
+      let result: unknown;
+      try {
+        const tool = this.tools().get(call?.name ?? '');
+        if (!tool || !call) throw new Error('Unknown tool call');
+        const args: unknown = JSON.parse(call.args);
+        if (!args || typeof args !== 'object' || Array.isArray(args)) throw new Error('Tool arguments must be a JSON object');
+        /**  --- step 3 code start --- */
+        this.state?.assertToolStateCurrent(toolCallId); // preserve manual edits.
+        /**  --- step 3 code end --- */
+        result = await runInInjectionContext(this.injector, () => tool.action(args as Record<string, unknown>));
+      } catch (error) {
+        result = { status: 'error', message: error instanceof Error ? error.message : 'Tool execution failed' };
+      }
+      /**  --- step 3 code start --- */
+      this.state?.flush(); // synchronize edits before the next model step.
+      /**  --- step 3 code end --- */
+      acknowledge(result ?? { status: 'success' });
+    }
   }
 }
+/**  --- step 2 code end --- */

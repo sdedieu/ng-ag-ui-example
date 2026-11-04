@@ -1,177 +1,130 @@
-import {
-  computed,
-  inject,
-  Injectable,
-  Signal,
-  signal,
-  WritableSignal,
-} from '@angular/core';
-
+import { computed, inject, Injectable, signal } from '@angular/core';
 import {
   BaseEvent,
   EventType,
-  TextMessageChunkEvent,
-  ToolCallChunkEvent,
   RunErrorEvent,
-  ToolCallEndEvent,
+  TextMessageChunkEvent,
   TextMessageEndEvent,
+  /**  --- step 2 code start --- */
+  ToolCallChunkEvent,
+  ToolCallEndEvent,
+  /**  --- step 2 code end --- */
 } from '@ag-ui/client';
 import {
-  ToolCallMessage,
   AssistantMessage,
-  UserMessage,
   Message,
   MessageStatus,
+  UserMessage,
 } from '../../shared/models/message';
+/**  --- step 2 code start --- */
+import { ToolCallMessage } from '../../shared/models/message';
+/**  --- step 2 code end --- */
 import { ApiService } from '../../shared/service/api.service';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class ChatService {
-  private readonly _apiService = inject(ApiService);
-
-  private readonly _messages = signal<Message[]>([]);
-  readonly messages = this._messages.asReadonly();
+  private readonly api = inject(ApiService);
+  private readonly history = signal<Message[]>([]);
   private readonly runActive = signal(false);
+  private assistant?: AssistantMessage;
+  private user?: UserMessage;
+  /**  --- step 2 code start --- */
+  private tool?: ToolCallMessage;
+  /**  --- step 2 code end --- */
 
-  readonly isLastMessageUserAndSending = computed(() => {
-    const messages = this.messages();
-    return (
-      messages.length > 0 &&
-      messages[messages.length - 1].role === 'user' &&
-      [MessageStatus.SENDING, MessageStatus.SENT].includes(
-        messages[messages.length - 1].status(),
-      )
-    );
-  });
-
-  readonly isSomeMessageAIAndStreamingButEmpty = computed(() => {
-    const messages = this.messages();
-    return messages.some(
-      (msg) =>
-        msg.status() === MessageStatus.STREAMING &&
-        ((msg instanceof AssistantMessage && !msg.content()) ||
-          (msg instanceof ToolCallMessage && !msg.result())),
-    );
-  });
-
-  readonly isLoading: Signal<boolean> = computed(() => {
+  readonly messages = this.history.asReadonly();
+  readonly isLoading = computed(() => {
+    const last = this.messages().at(-1);
     return (
       this.runActive() ||
-      this.isLastMessageUserAndSending() ||
-      this.isSomeMessageAIAndStreamingButEmpty()
+      (last?.role === 'user' &&
+        [MessageStatus.SENDING, MessageStatus.SENT].includes(last.status()))
     );
   });
 
-  private toolCallMessage: WritableSignal<ToolCallMessage | null> =
-    signal(null);
-  private assistantMessage: WritableSignal<AssistantMessage | null> =
-    signal(null);
-  private userMessage: WritableSignal<UserMessage | null> = signal(null);
-
-  readonly lastToolCallName = computed(
-    () => this.toolCallMessage()?.toolCallName,
-  );
-
   constructor() {
-    this._apiService.events$.subscribe({
-      next: (event: BaseEvent) => {
-        switch (event.type) {
-          case EventType.RUN_STARTED: {
-            this.runActive.set(true);
-            break;
+    this.api.events$.subscribe((event) => {
+      /**  --- step 2 code start --- */
+      this.handleToolEvent(event);
+      /**  --- step 2 code end --- */
+      switch (event.type) {
+        case EventType.RUN_STARTED:
+          this.runActive.set(true);
+          break;
+        case EventType.TEXT_MESSAGE_CHUNK: {
+          const chunk = event as TextMessageChunkEvent;
+          if (this.assistant && this.assistant.messageId === chunk.messageId) {
+            this.assistant.content.update((text) => text + chunk.delta);
+          } else {
+            const message = new AssistantMessage(chunk);
+            this.assistant = message;
+            this.history.update((messages) => [...messages, message]);
           }
-
-          case EventType.TEXT_MESSAGE_CHUNK: {
-            const ev = event as TextMessageChunkEvent;
-            if (
-              !this.assistantMessage() ||
-              this.assistantMessage()?.messageId !== ev.messageId
-            ) {
-              this.assistantMessage.set(new AssistantMessage(ev));
-              this._messages.update((msgs) => [
-                ...msgs,
-                this.assistantMessage()!,
-              ]);
-            } else
-              this.assistantMessage()?.content.update(
-                (content) => content + ev.delta,
-              );
-            break;
-          }
-
-          case EventType.TOOL_CALL_CHUNK: {
-            const ev = event as ToolCallChunkEvent;
-            if (
-              !this.toolCallMessage() ||
-              this.toolCallMessage()?.toolCallId !== ev.toolCallId
-            ) {
-              if (this.toolCallMessage()) this.toolCallMessage()?.complete();
-              this.toolCallMessage.set(new ToolCallMessage(ev));
-              this._messages.update((msgs) => [
-                ...msgs,
-                this.toolCallMessage()!,
-              ]);
-            } else
-              this.toolCallMessage()?.content.update(
-                (content) => content + ev.delta,
-              );
-            break;
-          }
-
-          case EventType.TOOL_CALL_END: {
-            const ev = event as ToolCallEndEvent;
-            if (this.toolCallMessage()?.toolCallId === ev.toolCallId) {
-              this.toolCallMessage()?.complete();
-            }
-            break;
-          }
-
-          case EventType.TEXT_MESSAGE_END: {
-            const ev = event as TextMessageEndEvent;
-            if (this.assistantMessage()?.messageId === ev.messageId) {
-              this.assistantMessage()?.complete();
-            }
-            break;
-          }
-
-          case EventType.RUN_FINISHED: {
-            this.runActive.set(false);
-            this.toolCallMessage()?.complete();
-            this.toolCallMessage.set(null);
-            this.assistantMessage()?.complete();
-            this.assistantMessage.set(null);
-
-            break;
-          }
-
-          case EventType.RUN_ERROR: {
-            const ev = event as RunErrorEvent;
-            this.runActive.set(false);
-            this.toolCallMessage()?.error();
-            this.toolCallMessage.set(null);
-            this.assistantMessage()?.error();
-            this.assistantMessage.set(null);
-            this.userMessage()?.status.set(MessageStatus.ERROR);
-            console.error('Error from backend:', ev.message);
-            break;
-          }
+          break;
         }
-      },
+        case EventType.TEXT_MESSAGE_END:
+          if (
+            this.assistant?.messageId ===
+            (event as TextMessageEndEvent).messageId
+          )
+            this.assistant.complete();
+          break;
+        case EventType.RUN_FINISHED:
+          this.runActive.set(false);
+          this.assistant?.complete();
+          this.assistant = undefined;
+          break;
+        case EventType.RUN_ERROR:
+          this.runActive.set(false);
+          this.assistant?.error();
+          this.assistant = undefined;
+          this.user?.status.set(MessageStatus.ERROR);
+          console.error((event as RunErrorEvent).message);
+          break;
+      }
     });
   }
 
   sendMessage(content: string): void {
-    this.userMessage.set(new UserMessage(content));
-    this._messages.update((msgs) => [...msgs, this.userMessage()!]);
-
-    this._apiService.sendMessage(this.userMessage()!);
-    this.userMessage()?.sent();
+    const message = new UserMessage(content);
+    this.user = message;
+    this.history.update((messages) => [...messages, message]);
+    this.api.sendMessage(message);
+    message.sent();
   }
 
   cancelMessage(): void {
-    this._apiService.cancelMessage();
-    this.userMessage()?.cancel();
+    this.api.cancelMessage();
+    this.user?.cancel();
   }
+
+  /**  --- step 2 code start --- */
+  private handleToolEvent(event: BaseEvent): void {
+    switch (event.type) {
+      case EventType.TOOL_CALL_CHUNK: {
+        const chunk = event as ToolCallChunkEvent;
+        if (this.tool && this.tool.toolCallId === chunk.toolCallId) {
+          this.tool.content.update((text) => text + chunk.delta);
+        } else {
+          const message = new ToolCallMessage(chunk);
+          this.tool = message;
+          this.history.update((messages) => [...messages, message]);
+        }
+        break;
+      }
+      case EventType.TOOL_CALL_END:
+        if (this.tool?.toolCallId === (event as ToolCallEndEvent).toolCallId)
+          this.tool.complete();
+        break;
+      case EventType.RUN_FINISHED:
+        this.tool?.complete();
+        this.tool = undefined;
+        break;
+      case EventType.RUN_ERROR:
+        this.tool?.error();
+        this.tool = undefined;
+        break;
+    }
+  }
+  /**  --- step 2 code end --- */
 }
