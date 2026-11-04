@@ -1,19 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
-import { OpenAI } from 'openai';
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import { Server } from 'socket.io';
 import { connectChat } from './chat';
 import { connectTools } from './tools';
 import { connectSharedState } from './shared-state';
 
-// ✅ Load environment variables
-dotenv.config();
-
 const app = express();
 const PORT = 3000;
-const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY'] });
 
 // ✅ Enable CORS
 app.use(
@@ -34,7 +29,7 @@ const io = new Server(httpServer, {
 
 io.on('connection', (socket) => {
   console.log('✅ Client connected');
-  connectChat(socket, openai, {
+  connectChat(socket, {
     tools: connectTools(socket),        // remove this line for chat only.
     state: connectSharedState(socket),  // remove this line for chat + tools.
   });

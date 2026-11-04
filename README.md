@@ -19,14 +19,14 @@ the earlier lesson branches; the examples below explain how each step adds it.
 On the backend, start with:
 
 ```ts
-connectChat(socket, openai);
+connectChat(socket);
 ```
 
 On the frontend, provide `ApiService` alongside the application's Angular providers.
 Omit the `ToolService`, `registerAppTools` initializer, and `ChatStateService`
 provider entries for this lesson.
 
-Follow the flow in `api.service.ts` → backend `chat.ts` → `stream-response.ts`
+Follow the flow in `api.service.ts` → backend `chat.ts`
 → frontend `chat.service.ts`. A run sends one model request, forwards text chunks,
 and emits one completion event. `previous_response_id` preserves conversation
 context between user messages. The conversation queue processes messages in order.
@@ -36,7 +36,7 @@ context between user messages. The conversation queue processes messages in orde
 Add the backend tools module:
 
 ```ts
-connectChat(socket, openai, {
+connectChat(socket, {
   tools: connectTools(socket),
 });
 ```
@@ -63,7 +63,7 @@ results. Live manual edits become shared agent context in lesson 3.
 Add the state module to the same backend call:
 
 ```ts
-connectChat(socket, openai, {
+connectChat(socket, {
   tools: connectTools(socket),
   state: connectSharedState(socket),
 });
@@ -94,6 +94,9 @@ To install dependencies, run:
 ```bash
 ./install.sh
 ```
+
+Create a local `.env` file containing `OPENAI_API_KEY` before starting the backend.
+This file is ignored by Git.
 
 ## Development server
 

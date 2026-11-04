@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { Message, MessageStatus } from '../../shared/models/message';
 import { Loading } from '../../shared/ui/loading/loading';
+import { MarkdownComponent } from 'ngx-markdown';
 
 @Component({
   selector: 'chat-message',
@@ -21,13 +22,17 @@ import { Loading } from '../../shared/ui/loading/loading';
   },
   template: `
     @if (role() === 'assistant' || role() === 'user') {
-      {{ message().content() }}
+      <markdown
+        class="prose prose-sm block max-w-none overflow-x-auto wrap-anywhere"
+        [class.prose-invert]="role() === 'user'"
+        [data]="message().content()"
+      ></markdown>
     }
     @if (isLoading()) {
       <loading />
     }
   `,
-  imports: [Loading],
+  imports: [Loading, MarkdownComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatMessage {

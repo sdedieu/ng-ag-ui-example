@@ -1,11 +1,62 @@
 import { EventType, RunAgentInputSchema } from '@ag-ui/client';
 import { OpenAI } from 'openai';
-import type { ResponseInput } from 'openai/resources/responses/responses';
 import type { Socket } from 'socket.io';
 import { getAgentInstructions } from './agent-context';
-import { AgentStep, streamResponse } from './stream-response';
+import {
+  Response,
+  ResponseCreateParamsStreaming,
+} from 'openai/resources/responses/responses';
+import { randomUUID } from 'crypto';
+import type { ResponseInput } from 'openai/resources/responses/responses';
 import type { connectTools } from './tools';
 import type { connectSharedState } from './shared-state';
+
+export interface AgentStep {
+  response: Response;
+  messageId: string;
+  stateRevision?: number;
+}
+
+const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY'] });
+
+export async function streamResponse(
+  socket: Socket,
+  request: ResponseCreateParamsStreaming,
+): Promise<AgentStep> {
+  const stream = await openai.responses.create(request);
+  const messageId = randomUUID();
+  let hasText = false;
+
+  for await (const event of stream) {
+    switch (event.type) {
+      case 'response.output_text.delta':
+        if (!event.delta) break;
+        if (!hasText) console.log('📨 Agent:', event.delta);
+        hasText = true;
+        socket.emit('event', {
+          type: EventType.TEXT_MESSAGE_CHUNK,
+          messageId,
+          delta: event.delta,
+        });
+        break;
+      case 'response.completed':
+        if (hasText)
+          socket.emit('event', { type: EventType.TEXT_MESSAGE_END, messageId });
+        return { response: event.response, messageId };
+      case 'response.failed':
+        throw new Error(
+          event.response.error?.message ?? 'Agent response failed',
+        );
+      case 'response.incomplete':
+        throw new Error(
+          `Agent response incomplete: ${event.response.incomplete_details?.reason}`,
+        );
+      case 'error':
+        throw new Error(event.message);
+    }
+  }
+  throw new Error('Agent stream ended before completion');
+}
 
 interface ChatFeatures {
   tools?: ReturnType<typeof connectTools>;
@@ -13,7 +64,7 @@ interface ChatFeatures {
 }
 
 // Lesson 1 owns run boundaries, text streaming, and conversation continuity.
-export function connectChat(socket: Socket, openai: OpenAI, features: ChatFeatures = {}) {
+export function connectChat(socket: Socket, features: ChatFeatures = {}) {
   let threadId: string | undefined;
   let lastResponseId: string | undefined;
   let conversationQueue = Promise.resolve();
@@ -39,7 +90,7 @@ export function connectChat(socket: Socket, openai: OpenAI, features: ChatFeatur
           const stateRevision = state?.revision;
           const context: ResponseInput = state
             ? [{ role: 'user', content: JSON.stringify({ frontendState: state.state }) }] : [];
-          const step = await streamResponse(openai, socket, {
+          const step = await streamResponse(socket, {
             model: 'gpt-4o',
             instructions: getAgentInstructions(input.forwardedProps?.clientContext, {
               tools: !!features.tools,
