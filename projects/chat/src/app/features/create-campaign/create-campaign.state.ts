@@ -3,9 +3,6 @@ import { GenricFormStateService } from '../../shared/service/generic-form-state.
 import { DashboardStateService } from '../dashboard/dashboard.state';
 import { form } from '@angular/forms/signals';
 import { createCampaignSchema } from './create-campaign.schema';
-/**  --- step 3 code start --- */
-import { ChatStateService } from '../../shared/service/chat-state.service';
-/**  --- step 3 code end --- */
 
 export interface BudgetChannel {
   id: string;
@@ -264,23 +261,9 @@ const defaultState: CreateCampaignState = {
 })
 export class CreateCampaignStateService extends GenricFormStateService<CreateCampaignState> {
   private readonly _dashboardStateService = inject(DashboardStateService);
-  /**  --- step 3 code start --- */
-  private readonly _chatState = inject(ChatStateService, { optional: true });
-  /**  --- step 3 code end --- */
 
   protected override readonly _state = signal(defaultState);
   readonly campaignForm = form(this._state, createCampaignSchema);
-
-  /**  --- step 3 code start --- */
-  constructor() {
-    super();
-    this._chatState?.registerStateSource('createCampaign', this.state);
-    this._chatState?.registerStateSource('createCampaignValidation', () => ({
-      valid: this.campaignForm().valid(),
-      errors: this.campaignForm().errorSummary().map(({ kind, message }) => ({ kind, message })),
-    }));
-  }
-  /**  --- step 3 code end --- */
 
   reset(): void {
     this._state.set(defaultState);

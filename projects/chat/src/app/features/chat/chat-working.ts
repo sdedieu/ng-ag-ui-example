@@ -5,9 +5,9 @@ import {
   signal,
 } from '@angular/core';
 import { ChatService } from './chat.service';
-/**  --- step 2 code start --- */
+
 import { ToolService } from './tool.service';
-/**  --- step 2 code end --- */
+
 import { Loading } from '../../shared/ui/loading/loading';
 
 @Component({
@@ -25,7 +25,7 @@ import { Loading } from '../../shared/ui/loading/loading';
 export class ChatWorkingComponent {
   private readonly _chatService = inject(ChatService);
   readonly isLoading = this._chatService.isLoading;
-  /**  --- step 2 code start --- */
+
   readonly loadingMessage = inject(ToolService, { optional: true })?.loadingMessage ?? signal('Loading');
-  /**  --- step 2 code end --- */
+
 }

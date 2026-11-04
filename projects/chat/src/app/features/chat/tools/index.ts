@@ -1,4 +1,4 @@
-/**  --- step 2 code start --- */
+
 import { inject } from '@angular/core';
 import { ToolService } from '../tool.service';
 import { CHANGE_BACKGROUND_TOOL } from './change-background';
@@ -24,4 +24,3 @@ export function registerAppTools(): void {
   tools.register(CLICK_ON_ELEMENT_TOOL);
   tools.register(LOOKUP_CITY_POSTAL_CODE_TOOL);
 }
-/**  --- step 2 code end --- */

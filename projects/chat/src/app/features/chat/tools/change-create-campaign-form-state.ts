@@ -1,4 +1,4 @@
-/**  --- step 2 code start --- */
+
 import { inject } from '@angular/core';
 import { CreateCampaignStateService } from '../../create-campaign/create-campaign.state';
 
@@ -273,10 +273,6 @@ These are requirements for the resulting campaign to be ready, not required keys
 - Other guardrails: kpiGuardrail.maxCac, minRoas and learningBudget are required, finite and >= 0. learningBudget must not exceed totalBudget. All three may legitimately be 0; do not treat those zeros as missing.
 
 Missing-input and correction workflow:
-The latest frontendState context contains createCampaign and createCampaignValidation.
-These include manual edits and override older drafts, tool results and errors. Preserve those edits.
-For example, if the snapshot has totalBudget 30000 but currency is empty, ask only for currency,
-not for the total budget again. Apply a follow-up date patch without resending or resetting the draft.
 After this tool executes, use its returned state, valid flag and validation errors to produce the chat reply. Explain that the draft is incomplete when errors remain and ask concise grouped questions for those errors, naming channels that need caps or bids. Once the requested changes are applied, do not call this tool again merely because the draft is incomplete; wait for the user's answers. Never submit the campaign automatically.
 1. Assess the resulting draft using the supplied campaign context plus the proposed patch. A field omitted from a follow-up patch keeps its previous value; omission alone does not mean it is missing. Use only context actually supplied to you. Without campaign context, do not claim to know existing values or that the whole form is ready.
 2. Fill safe planning suggestions as described above. Ask for missing business facts: total budget and currency, dates, locations, and positive daily caps and max bids for each enabled channel. Name the affected channels and group related questions. Ask only for unresolved inputs; do not repeat values already supplied or ask for optional text and valid zero settings.
@@ -500,4 +496,3 @@ If this draft is included in the supplied conversation and the subsequent answer
     };
   },
 };
-/**  --- step 2 code end --- */

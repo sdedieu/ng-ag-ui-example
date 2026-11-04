@@ -5,10 +5,10 @@ import {
   RunErrorEvent,
   TextMessageChunkEvent,
   TextMessageEndEvent,
-  /**  --- step 2 code start --- */
+
   ToolCallChunkEvent,
   ToolCallEndEvent,
-  /**  --- step 2 code end --- */
+
 } from '@ag-ui/client';
 import {
   AssistantMessage,
@@ -16,9 +16,9 @@ import {
   MessageStatus,
   UserMessage,
 } from '../../shared/models/message';
-/**  --- step 2 code start --- */
+
 import { ToolCallMessage } from '../../shared/models/message';
-/**  --- step 2 code end --- */
+
 import { ApiService } from '../../shared/service/api.service';
 
 @Injectable({ providedIn: 'root' })
@@ -28,9 +28,8 @@ export class ChatService {
   private readonly runActive = signal(false);
   private assistant?: AssistantMessage;
   private user?: UserMessage;
-  /**  --- step 2 code start --- */
+
   private tool?: ToolCallMessage;
-  /**  --- step 2 code end --- */
 
   readonly messages = this.history.asReadonly();
   readonly isLoading = computed(() => {
@@ -44,9 +43,9 @@ export class ChatService {
 
   constructor() {
     this.api.events$.subscribe((event) => {
-      /**  --- step 2 code start --- */
+
       this.handleToolEvent(event);
-      /**  --- step 2 code end --- */
+
       switch (event.type) {
         case EventType.RUN_STARTED:
           this.runActive.set(true);
@@ -98,7 +97,6 @@ export class ChatService {
     this.user?.cancel();
   }
 
-  /**  --- step 2 code start --- */
   private handleToolEvent(event: BaseEvent): void {
     switch (event.type) {
       case EventType.TOOL_CALL_CHUNK: {
@@ -126,5 +124,5 @@ export class ChatService {
         break;
     }
   }
-  /**  --- step 2 code end --- */
+
 }
