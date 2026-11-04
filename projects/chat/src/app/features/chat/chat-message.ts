@@ -17,7 +17,6 @@ import { Loading } from '../../shared/ui/loading/loading';
     '[class.text-white]': '!isAI()',
     '[class.bg-gray-200]': 'isAI()',
     '[class.text-gray-900]': 'isAI()',
-    '[class.hidden]': 'isToolComplete()',
   },
   template: `
     @if (role() === 'assistant' || role() === 'user') {
@@ -35,25 +34,11 @@ export class ChatMessage {
 
   readonly role = computed(() => this.message().role);
 
-  readonly isAI = computed(() => ['assistant', 'tool'].includes(this.role()));
+  readonly isAI = computed(() => this.role() === 'assistant');
 
   readonly isEmptyAssistant = computed(
     () => this.role() === 'assistant' && !this.message().content(),
   );
 
-  readonly isStreamingTool = computed(
-    () =>
-      this.role() === 'tool' &&
-      this.message().status() === MessageStatus.STREAMING,
-  );
-
-  readonly isToolComplete = computed(
-    () =>
-      this.role() === 'tool' &&
-      this.message().status() === MessageStatus.COMPLETE,
-  );
-
-  readonly isLoading = computed(
-    () => this.isEmptyAssistant() || this.isStreamingTool(),
-  );
+  readonly isLoading = this.isEmptyAssistant;
 }

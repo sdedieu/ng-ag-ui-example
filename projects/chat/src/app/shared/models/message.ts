@@ -1,4 +1,4 @@
-import { TextMessageChunkEvent, ToolCallChunkEvent } from '@ag-ui/client';
+import { TextMessageChunkEvent } from '@ag-ui/client';
 import { computed, signal, WritableSignal } from '@angular/core';
 import { generateUUID } from '../utils/uuid';
 
@@ -20,11 +20,10 @@ export type AssistantMessageStatus = Exclude<
   MessageStatus,
   MessageStatus.SENDING | MessageStatus.SENT
 >;
-export type ToolCallMessageStatus = AssistantMessageStatus;
 
 export interface Message {
   content: WritableSignal<string>;
-  role: 'user' | 'assistant' | 'tool';
+  role: 'user' | 'assistant';
   messageId: string;
   status: WritableSignal<MessageStatus>;
 }
@@ -52,7 +51,7 @@ export class UserMessage implements Message {
 
 export class AIMessage implements Message {
   readonly content: WritableSignal<string>;
-  readonly role!: 'assistant' | 'tool';
+  readonly role!: 'assistant';
   messageId!: string;
   readonly status: WritableSignal<AssistantMessageStatus>;
   readonly isDone = computed(() =>
@@ -63,7 +62,7 @@ export class AIMessage implements Message {
     ].includes(this.status()),
   );
 
-  constructor(readonly event: TextMessageChunkEvent | ToolCallChunkEvent) {
+  constructor(readonly event: TextMessageChunkEvent) {
     this.content = signal<string>(event?.delta ?? '');
     this.status = signal<AssistantMessageStatus>(MessageStatus.STREAMING);
   }
@@ -86,28 +85,5 @@ export class AssistantMessage extends AIMessage {
     super(event);
     this.role = 'assistant';
     this.messageId = event.messageId ?? generateUUID();
-  }
-}
-
-export class ToolCallMessage extends AIMessage {
-  override readonly role: 'tool';
-  readonly toolCallId: string | undefined;
-  readonly toolCallName: string | undefined;
-  readonly result = computed(() => {
-    if (!this.isDone()) return null;
-    try {
-      return JSON.parse(this.content());
-    } catch {
-      console.error('failed to parse', this.content());
-      return null;
-    }
-  });
-
-  constructor(override readonly event: ToolCallChunkEvent) {
-    super(event);
-    this.role = 'tool';
-    this.messageId = event.parentMessageId ?? generateUUID();
-    this.toolCallId = event?.toolCallId;
-    this.toolCallName = event?.toolCallName;
   }
 }
