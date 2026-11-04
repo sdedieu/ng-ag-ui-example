@@ -1,4 +1,3 @@
-/**  --- step 2 code start --- */
 import { EventType, RunAgentInput } from '@ag-ui/client';
 import type { ResponseInput } from 'openai/resources/responses/responses';
 import type { Socket } from 'socket.io';
@@ -36,13 +35,11 @@ export function connectTools(socket: Socket) {
       const results: ResponseInput = [];
       for (const call of calls) {
         console.log('📨 Agent:', { tool: call.name, arguments: call.arguments });
-        /**  --- step 3 code start --- */
         // only present when shared state support is connected.
         if (step.stateRevision !== undefined) socket.emit('event', {
           type: EventType.CUSTOM, name: 'tool-state-version',
           value: { toolCallId: call.call_id, revision: step.stateRevision },
         });
-        /**  --- step 3 code end --- */
         socket.emit('event', {
           type: EventType.TOOL_CALL_CHUNK, parentMessageId: step.messageId,
           toolCallId: call.call_id, toolCallName: call.name, delta: call.arguments,
@@ -58,4 +55,3 @@ export function connectTools(socket: Socket) {
 
   return { validate, requestOptions, continueRun };
 }
-/**  --- step 2 code end --- */

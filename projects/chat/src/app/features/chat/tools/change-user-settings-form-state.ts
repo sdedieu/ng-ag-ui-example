@@ -1,4 +1,3 @@
-/**  --- step 2 code start --- */
 import { inject } from '@angular/core';
 import { UserStateService } from '../../user-settings/user.state';
 
@@ -45,4 +44,3 @@ export const CHANGE_USER_SETTINGS_FORM_STATE_TOOL = {
     return { status: 'success' };
   },
 };
-/**  --- step 2 code end --- */

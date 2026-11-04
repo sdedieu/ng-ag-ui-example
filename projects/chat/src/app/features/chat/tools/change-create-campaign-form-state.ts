@@ -1,4 +1,3 @@
-/**  --- step 2 code start --- */
 import { inject } from '@angular/core';
 import { CreateCampaignStateService } from '../../create-campaign/create-campaign.state';
 
@@ -500,4 +499,3 @@ If this draft is included in the supplied conversation and the subsequent answer
     };
   },
 };
-/**  --- step 2 code end --- */

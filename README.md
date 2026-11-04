@@ -4,11 +4,15 @@ Demo workspace for AG-UI protocol using Angular and Express backend
 
 ## Teaching the demo in three lessons
 
-The checked-in app enables all three lessons. Choose a lesson at two composition
-points: `projects/chat-backend/src/server.ts` and
-`projects/chat/src/app/app.config.ts`. The additions inside the implementation
-are wrapped in `/**  --- step 2 code start --- */` / `end` markers and the
-matching step 3 markers, so they can be introduced as grouped code blocks.
+Choose the course branch:
+
+- `feat/chat-text`: step 1 — streamed text and conversation continuity.
+- `feat/chat-with-tools`: step 2 — frontend tool registration and execution.
+- `main`: step 3 — all features, including AG-UI state synchronization.
+
+The composition points are `projects/chat-backend/src/server.ts` and
+`projects/chat/src/app/app.config.ts`. The later-feature code is removed from
+the earlier lesson branches; the examples below explain how each step adds it.
 
 ### 1. Streaming chat
 

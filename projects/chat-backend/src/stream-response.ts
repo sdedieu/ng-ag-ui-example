@@ -7,9 +7,7 @@ import type { Socket } from 'socket.io';
 export interface AgentStep {
   response: Response;
   messageId: string;
-  /**  --- step 3 code start --- */
   stateRevision?: number;
-  /**  --- step 3 code end --- */
 }
 
 // Lesson 1: forward text chunks, then return the completed response.

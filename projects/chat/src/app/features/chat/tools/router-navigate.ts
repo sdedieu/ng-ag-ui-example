@@ -1,4 +1,3 @@
-/**  --- step 2 code start --- */
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 
@@ -27,4 +26,3 @@ export const ROUTER_NAVIGATE_TOOL = {
     return { status: 'success' };
   },
 };
-/**  --- step 2 code end --- */

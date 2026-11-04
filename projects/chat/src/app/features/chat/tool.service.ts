@@ -1,9 +1,6 @@
-/**  --- step 2 code start --- */
 import { computed, inject, Injectable, Injector, runInInjectionContext, signal } from '@angular/core';
 import { BaseEvent, EventType, Tool, ToolCallChunkEvent, ToolCallEndEvent } from '@ag-ui/client';
-/**  --- step 3 code start --- */
 import { ChatStateService } from '../../shared/service/chat-state.service';
-/**  --- step 3 code end --- */
 
 export interface RegisteredTool<TArgs extends object> extends Tool {
   parameters: Record<string, unknown>;
@@ -16,9 +13,7 @@ export interface RegisteredTool<TArgs extends object> extends Tool {
 @Injectable()
 export class ToolService {
   private readonly injector = inject(Injector);
-  /**  --- step 3 code start --- */
   private readonly state = inject(ChatStateService, { optional: true });
-  /**  --- step 3 code end --- */
   private readonly tools = signal(new Map<string, RegisteredTool<Record<string, unknown>>>());
   private readonly calls = new Map<string, { name: string; args: string }>();
   private readonly activeTool = signal('');
@@ -57,18 +52,13 @@ export class ToolService {
         if (!tool || !call) throw new Error('Unknown tool call');
         const args: unknown = JSON.parse(call.args);
         if (!args || typeof args !== 'object' || Array.isArray(args)) throw new Error('Tool arguments must be a JSON object');
-        /**  --- step 3 code start --- */
         this.state?.assertToolStateCurrent(toolCallId); // preserve manual edits.
-        /**  --- step 3 code end --- */
         result = await runInInjectionContext(this.injector, () => tool.action(args as Record<string, unknown>));
       } catch (error) {
         result = { status: 'error', message: error instanceof Error ? error.message : 'Tool execution failed' };
       }
-      /**  --- step 3 code start --- */
       this.state?.flush(); // synchronize edits before the next model step.
-      /**  --- step 3 code end --- */
       acknowledge(result ?? { status: 'success' });
     }
   }
 }
-/**  --- step 2 code end --- */

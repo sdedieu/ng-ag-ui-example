@@ -1,4 +1,3 @@
-/**  --- step 3 code start --- */
 import { EventType, StateDeltaEventSchema } from '@ag-ui/client';
 import { applyPatch, compare } from 'fast-json-patch';
 import type { Socket } from 'socket.io';
@@ -51,4 +50,3 @@ export function connectSharedState(socket: Socket) {
 
   return { get state() { return state; }, get revision() { return revision; }, accept };
 }
-/**  --- step 3 code end --- */

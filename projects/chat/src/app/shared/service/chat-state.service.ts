@@ -1,4 +1,3 @@
-/**  --- step 3 code start --- */
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { BaseEvent, CustomEvent, EventType, StateSnapshotEventSchema, StateDeltaEventSchema } from '@ag-ui/client';
 import { applyPatch, compare } from 'fast-json-patch';
@@ -111,4 +110,3 @@ export class ChatStateService {
     }
   }
 }
-/**  --- step 3 code end --- */
