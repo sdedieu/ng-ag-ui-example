@@ -10,9 +10,11 @@ import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { apiInterceptor } from './shared/interceptors/api.interceptor';
 import { ApiService } from './shared/service/api.service';
+import { provideMarkdown } from 'ngx-markdown';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideMarkdown(),
 
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
