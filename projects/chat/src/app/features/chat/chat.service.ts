@@ -1,14 +1,11 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import {
-  BaseEvent,
   EventType,
   RunErrorEvent,
   TextMessageChunkEvent,
   TextMessageEndEvent,
-
   ToolCallChunkEvent,
   ToolCallEndEvent,
-
 } from '@ag-ui/client';
 import {
   AssistantMessage,
@@ -43,12 +40,24 @@ export class ChatService {
 
   constructor() {
     this.api.events$.subscribe((event) => {
-
-      this.handleToolEvent(event);
-
       switch (event.type) {
         case EventType.RUN_STARTED:
           this.runActive.set(true);
+          break;
+        case EventType.TOOL_CALL_CHUNK: {
+          const chunk = event as ToolCallChunkEvent;
+          if (this.tool && this.tool.toolCallId === chunk.toolCallId) {
+            this.tool.content.update((text) => text + chunk.delta);
+          } else {
+            const message = new ToolCallMessage(chunk);
+            this.tool = message;
+            this.history.update((messages) => [...messages, message]);
+          }
+          break;
+        }
+        case EventType.TOOL_CALL_END:
+          if (this.tool?.toolCallId === (event as ToolCallEndEvent).toolCallId)
+            this.tool.complete();
           break;
         case EventType.TEXT_MESSAGE_CHUNK: {
           const chunk = event as TextMessageChunkEvent;
@@ -72,12 +81,16 @@ export class ChatService {
           this.runActive.set(false);
           this.assistant?.complete();
           this.assistant = undefined;
+          this.tool?.complete();
+          this.tool = undefined;
           break;
         case EventType.RUN_ERROR:
           this.runActive.set(false);
           this.assistant?.error();
           this.assistant = undefined;
           this.user?.status.set(MessageStatus.ERROR);
+          this.tool?.error();
+          this.tool = undefined;
           console.error((event as RunErrorEvent).message);
           break;
       }
@@ -96,33 +109,4 @@ export class ChatService {
     this.api.cancelMessage();
     this.user?.cancel();
   }
-
-  private handleToolEvent(event: BaseEvent): void {
-    switch (event.type) {
-      case EventType.TOOL_CALL_CHUNK: {
-        const chunk = event as ToolCallChunkEvent;
-        if (this.tool && this.tool.toolCallId === chunk.toolCallId) {
-          this.tool.content.update((text) => text + chunk.delta);
-        } else {
-          const message = new ToolCallMessage(chunk);
-          this.tool = message;
-          this.history.update((messages) => [...messages, message]);
-        }
-        break;
-      }
-      case EventType.TOOL_CALL_END:
-        if (this.tool?.toolCallId === (event as ToolCallEndEvent).toolCallId)
-          this.tool.complete();
-        break;
-      case EventType.RUN_FINISHED:
-        this.tool?.complete();
-        this.tool = undefined;
-        break;
-      case EventType.RUN_ERROR:
-        this.tool?.error();
-        this.tool = undefined;
-        break;
-    }
-  }
-
 }

@@ -20,6 +20,9 @@ To install dependencies, run:
 ./install.sh
 ```
 
+Create a local `.env` file containing `OPENAI_API_KEY` before starting the backend.
+This file is ignored by Git.
+
 ## Development server
 
 To start a local development servers, run:

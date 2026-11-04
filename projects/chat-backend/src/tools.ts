@@ -2,7 +2,7 @@
 import { EventType, RunAgentInput } from '@ag-ui/client';
 import type { ResponseInput } from 'openai/resources/responses/responses';
 import type { Socket } from 'socket.io';
-import type { AgentStep } from './stream-response';
+import type { AgentStep } from './chat';
 
 type Respond = (messages: ResponseInput, previousResponseId?: string) => Promise<AgentStep>;
 const MAX_AGENT_STEPS = 10;
